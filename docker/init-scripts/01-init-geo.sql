@@ -11,6 +11,88 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 -- Note: shared_preload_libraries nécessite un redémarrage de PostgreSQL
 -- ALTER SYSTEM SET shared_preload_libraries = 'pg_stat_statements';
 
+-- Étendre la table subscribers avec les colonnes géographiques
+-- Note: Cette extension se fait après la création initiale de la table par Listmonk
+DO $$
+BEGIN
+    -- Ajouter les colonnes géographiques si elles n'existent pas
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='subscribers' AND column_name='code_insee') THEN
+        ALTER TABLE subscribers ADD COLUMN code_insee VARCHAR(10);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='subscribers' AND column_name='population_commune') THEN
+        ALTER TABLE subscribers ADD COLUMN population_commune INTEGER;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='subscribers' AND column_name='date_naissance') THEN
+        ALTER TABLE subscribers ADD COLUMN date_naissance DATE;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='subscribers' AND column_name='csp') THEN
+        ALTER TABLE subscribers ADD COLUMN csp VARCHAR(100);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='subscribers' AND column_name='siren') THEN
+        ALTER TABLE subscribers ADD COLUMN siren VARCHAR(20);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='subscribers' AND column_name='siret') THEN
+        ALTER TABLE subscribers ADD COLUMN siret VARCHAR(20);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='subscribers' AND column_name='telecopie') THEN
+        ALTER TABLE subscribers ADD COLUMN telecopie VARCHAR(20);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='subscribers' AND column_name='nom_commune') THEN
+        ALTER TABLE subscribers ADD COLUMN nom_commune VARCHAR(255);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='subscribers' AND column_name='departement_numero') THEN
+        ALTER TABLE subscribers ADD COLUMN departement_numero VARCHAR(3);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='subscribers' AND column_name='phone') THEN
+        ALTER TABLE subscribers ADD COLUMN phone VARCHAR(50);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='subscribers' AND column_name='website') THEN
+        ALTER TABLE subscribers ADD COLUMN website VARCHAR(255);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='subscribers' AND column_name='address1') THEN
+        ALTER TABLE subscribers ADD COLUMN address1 TEXT;
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='subscribers' AND column_name='city') THEN
+        ALTER TABLE subscribers ADD COLUMN city VARCHAR(255);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='subscribers' AND column_name='state') THEN
+        ALTER TABLE subscribers ADD COLUMN state VARCHAR(255);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='subscribers' AND column_name='zipcode') THEN
+        ALTER TABLE subscribers ADD COLUMN zipcode VARCHAR(10);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='subscribers' AND column_name='country') THEN
+        ALTER TABLE subscribers ADD COLUMN country VARCHAR(100);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='subscribers' AND column_name='title') THEN
+        ALTER TABLE subscribers ADD COLUMN title VARCHAR(10);
+    END IF;
+END $$;
+
+-- Créer les index pour les requêtes géographiques performantes
+CREATE INDEX IF NOT EXISTS idx_subscribers_departement ON subscribers(departement_numero);
+CREATE INDEX IF NOT EXISTS idx_subscribers_code_insee ON subscribers(code_insee);
+CREATE INDEX IF NOT EXISTS idx_subscribers_population ON subscribers(population_commune);
+CREATE INDEX IF NOT EXISTS idx_subscribers_csp ON subscribers(csp);
+CREATE INDEX IF NOT EXISTS idx_subscribers_nom_commune ON subscribers(nom_commune);
+CREATE INDEX IF NOT EXISTS idx_subscribers_state ON subscribers(state);
+
 -- Créer la table de mapping départements/régions
 CREATE TABLE IF NOT EXISTS departement_region_mapping (
     departement_numero VARCHAR(3) PRIMARY KEY,

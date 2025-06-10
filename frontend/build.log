@@ -278,4 +278,4 @@ dist/static/Campaign-9m_c5EPf.js           1,665.79 kB │ gzip: 504.64 kB
 - Using dynamic import() to code-split the application
 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
-✓ built in 12.57s
+✓ built in 12.73s
