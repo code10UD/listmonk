@@ -7,10 +7,16 @@
 ERROR: failed to solve: failed to compute cache key: "/2>/dev/null": not found
 ```
 
-### 2. Incompatibilité PostgreSQL ⚠️ NOUVEAU PROBLÈME
+### 2. Incompatibilité PostgreSQL ✅ RÉSOLU
 ```
 FATAL: database files are incompatible with server
 DETAIL: The data directory was initialized by PostgreSQL version 17, which is not compatible with this version 15.13.
+```
+
+### 3. Erreur SQL d'Initialisation ✅ RÉSOLU
+```
+ERROR: cannot create index on relation "tables"
+DETAIL: This operation is not supported for views.
 ```
 
 ## ✅ Solutions Appliquées
@@ -23,6 +29,11 @@ DETAIL: The data directory was initialized by PostgreSQL version 17, which is no
 - ❌ PostgreSQL 15 (incompatible avec données v17 existantes)
 - ✅ PostgreSQL 17 (compatible avec données existantes)
 - ✅ Nettoyage automatique des volumes incompatibles
+
+### 3. Script SQL - CORRIGÉ ✅
+- ❌ Index sur vue système `information_schema.tables` (impossible)
+- ✅ Script d'initialisation corrigé avec table de mapping départements/régions
+- ✅ 95 départements français pré-chargés automatiquement
 
 ## 🚀 Installation Maintenant
 
