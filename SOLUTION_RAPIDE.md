@@ -41,6 +41,12 @@ DETAIL: This operation is not supported for views.
 - ✅ Intégration des fichiers statiques avec stuffbin
 - ✅ Build multi-stage optimisé (Node.js + Go + Alpine)
 
+### 5. Configuration ESLint Frontend - CORRIGÉ ✅
+- ❌ Erreur "Cannot read .eslintignore file: /src/.gitignore"
+- ✅ Créé frontend/.eslintignore dédié
+- ✅ Modifié package.json (supprimé --ignore-path .gitignore)
+- ✅ Build frontend testé et validé localement
+
 ## 🚀 Installation Maintenant
 
 ### Solution Automatique (Recommandée)
