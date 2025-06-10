@@ -48,7 +48,6 @@ services:
     ports:
       - "9000:9000"
     volumes:
-      - ./config/config.toml:/listmonk/config.toml:ro
       - uploads_data:/listmonk/uploads
       - ./demo:/listmonk/demo:ro
     networks:
