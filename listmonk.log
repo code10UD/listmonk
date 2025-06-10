@@ -8,3 +8,4 @@
 2025/06/10 16:59:53.983848 init.go:620: initialized email (SMTP) messenger: username@smtp.yoursite.com
 2025/06/10 16:59:53.989036 init.go:1065: WARNING: Remove the admin_username and admin_password fields from the TOML configuration file. If you are using APIs, create and use new credentials. Users are now managed via the Admin -> Settings -> Users dashboard.
 ⇨ http server started on [::]:9000
+2025/06/10 17:14:54.162899 updates.go:73: new update v5.0.2 found
