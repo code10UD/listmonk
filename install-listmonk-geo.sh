@@ -89,6 +89,25 @@ main() {
         exit 1
     fi
     
+    # Vérifier que Docker fonctionne
+    if ! docker info &> /dev/null; then
+        log_error "Docker n'est pas démarré ou accessible. Vérifiez les permissions."
+        log_info "Essayez: sudo systemctl start docker"
+        exit 1
+    fi
+    
+    # Vérifier l'espace disque (minimum 2GB)
+    AVAILABLE_SPACE=$(df . | awk 'NR==2 {print $4}')
+    if [ "$AVAILABLE_SPACE" -lt 2097152 ]; then  # 2GB en KB
+        log_warning "Espace disque faible (< 2GB). L'installation pourrait échouer."
+    fi
+    
+    # Vérifier les permissions d'écriture
+    if [ ! -w "." ]; then
+        log_error "Pas de permissions d'écriture dans le répertoire courant"
+        exit 1
+    fi
+    
     log_success "Prérequis validés"
     
     # Vérifier la branche Git
@@ -171,8 +190,56 @@ main() {
     log_info "Construction et démarrage des services..."
     log_info "Utilisation du fichier: $COMPOSE_FILE"
     
-    docker-compose -f "$COMPOSE_FILE" build --no-cache
-    docker-compose -f "$COMPOSE_FILE" up -d
+    # Vérifier que tous les fichiers nécessaires existent
+    log_info "Vérification des fichiers requis..."
+    
+    REQUIRED_FILES=(
+        "Dockerfile.geo.simple"
+        "docker/entrypoint.sh"
+        "demo_geo_data.csv"
+        "demo_geographic_queries.sql"
+        "test_geo_data.csv"
+    )
+    
+    for file in "${REQUIRED_FILES[@]}"; do
+        if [ ! -f "$file" ]; then
+            log_error "Fichier requis manquant: $file"
+            exit 1
+        fi
+    done
+    
+    log_success "Tous les fichiers requis sont présents"
+    
+    # Construction avec gestion d'erreur
+    log_info "Construction de l'image Docker..."
+    if ! docker-compose -f "$COMPOSE_FILE" build --no-cache; then
+        log_error "Échec de la construction Docker"
+        log_info "Tentative de nettoyage et reconstruction..."
+        
+        # Nettoyage approfondi
+        docker system prune -af
+        docker builder prune -af
+        
+        # Nouvelle tentative
+        if ! docker-compose -f "$COMPOSE_FILE" build --no-cache; then
+            log_error "Échec définitif de la construction"
+            log_info "Vérifiez les logs ci-dessus pour plus de détails"
+            exit 1
+        fi
+    fi
+    
+    log_success "Construction réussie"
+    
+    # Démarrage avec gestion d'erreur
+    log_info "Démarrage des services..."
+    if ! docker-compose -f "$COMPOSE_FILE" up -d; then
+        log_error "Échec du démarrage des services"
+        log_info "Affichage des logs pour diagnostic..."
+        docker-compose -f "$COMPOSE_FILE" logs
+        exit 1
+    fi
+    
+    log_success "Services démarrés"
     
     # Attendre le démarrage
     log_info "Attente du démarrage des services (30 secondes)..."
