@@ -35,6 +35,12 @@ DETAIL: This operation is not supported for views.
 - ✅ Script d'initialisation corrigé avec table de mapping départements/régions
 - ✅ 95 départements français pré-chargés automatiquement
 
+### 4. Fichiers Statiques Frontend - CORRIGÉ ✅
+- ❌ Fichiers frontend manquants (config.toml.sample, assets compilés)
+- ✅ Dockerfile complet avec compilation frontend + backend
+- ✅ Intégration des fichiers statiques avec stuffbin
+- ✅ Build multi-stage optimisé (Node.js + Go + Alpine)
+
 ## 🚀 Installation Maintenant
 
 ### Solution Automatique (Recommandée)

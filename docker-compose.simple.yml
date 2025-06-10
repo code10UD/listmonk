@@ -28,7 +28,7 @@ services:
   listmonk:
     build:
       context: .
-      dockerfile: Dockerfile.geo.simple
+      dockerfile: Dockerfile.geo.complete
     container_name: listmonk-app-geo
     restart: unless-stopped
     depends_on:

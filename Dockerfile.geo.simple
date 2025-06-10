@@ -22,6 +22,8 @@ COPY schema.sql ./
 COPY Makefile ./
 COPY static/ ./static/
 COPY i18n/ ./i18n/
+COPY config.toml.sample ./config.toml.sample
+COPY config.toml.sample ./static/config.toml.sample
 
 # Construire seulement l'application Go (sans frontend)
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static"' -o listmonk cmd/*.go
@@ -44,6 +46,7 @@ RUN mkdir -p /listmonk/uploads /listmonk/static /listmonk/i18n /listmonk/scripts
 COPY --from=builder /src/listmonk /listmonk/listmonk
 COPY --from=builder /src/static /listmonk/static
 COPY --from=builder /src/i18n /listmonk/i18n
+COPY --from=builder /src/config.toml.sample /listmonk/config.toml.sample
 
 # Copier les scripts d'initialisation
 COPY docker/scripts/ /listmonk/scripts/
