@@ -48,6 +48,14 @@ echo "🔧 Configuration des permissions..."
 chmod +x docker/entrypoint.sh
 chmod +x docker/scripts/*.sh
 
+# Vérifier et corriger la version Go si nécessaire
+echo "🔍 Vérification de la version Go..."
+if grep -q "golang:1.21-alpine" Dockerfile.geo; then
+    echo "⚠️ Version Go 1.21 détectée, correction vers 1.24..."
+    sed -i 's/golang:1.21-alpine/golang:1.24-alpine/g' Dockerfile.geo
+    echo "✅ Version Go corrigée"
+fi
+
 # Construire et démarrer les services
 echo "🚀 Construction et démarrage des services..."
 docker-compose -f docker-compose.geo.yml build --no-cache

@@ -1,5 +1,5 @@
 # Dockerfile pour Listmonk avec extension géographique française
-FROM golang:1.21-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 # Installer les dépendances de build
 RUN apk add --no-cache git make build-base nodejs npm ca-certificates
