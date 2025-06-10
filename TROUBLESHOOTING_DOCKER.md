@@ -30,6 +30,35 @@ docker-compose -f docker-compose.geo.yml build --no-cache
 docker-compose -f docker-compose.geo.yml up -d
 ```
 
+### 1.1. Erreur de Build Frontend (ESLint)
+
+**Symptôme :**
+```
+Error: Cannot read .eslintignore file: /src/frontend/.gitignore
+Error: ENOENT: no such file or directory, open '/src/frontend/.gitignore'
+```
+
+**Cause :** Problèmes avec la configuration ESLint du frontend.
+
+**Solution Rapide :**
+```bash
+# Utiliser la version simplifiée sans build frontend
+./start-geo-simple.sh
+```
+
+**Solution Alternative :**
+```bash
+# Corriger les problèmes de frontend
+./fix-frontend-build.sh
+```
+
+**Solution Manuelle :**
+```bash
+# Utiliser le docker-compose simplifié
+docker-compose -f docker-compose.simple.yml build --no-cache
+docker-compose -f docker-compose.simple.yml up -d
+```
+
 ### 2. Ports Déjà Utilisés
 
 **Symptôme :**

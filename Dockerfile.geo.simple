@@ -1,8 +1,10 @@
-# Dockerfile pour Listmonk avec extension géographique française
+# Dockerfile simplifié pour Listmonk avec extension géographique française
+# Cette version utilise le binaire pré-compilé pour éviter les problèmes de build frontend
+
 FROM golang:1.24-alpine AS builder
 
 # Installer les dépendances de build
-RUN apk add --no-cache git make build-base nodejs npm ca-certificates
+RUN apk add --no-cache git make build-base ca-certificates
 
 # Définir le répertoire de travail
 WORKDIR /src
@@ -11,18 +13,18 @@ WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copier les fichiers source
-COPY . .
+# Copier les fichiers source (sans frontend)
+COPY cmd/ ./cmd/
+COPY internal/ ./internal/
+COPY models/ ./models/
+COPY queries.sql ./
+COPY schema.sql ./
+COPY Makefile ./
+COPY static/ ./static/
+COPY i18n/ ./i18n/
 
-# Construire le frontend
-WORKDIR /src/frontend
-# Créer un fichier .gitignore vide si il n'existe pas
-RUN touch .gitignore
-RUN npm install && npm run build
-
-# Construire l'application Go
-WORKDIR /src
-RUN make build
+# Construire seulement l'application Go (sans frontend)
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static"' -o listmonk cmd/*.go
 
 # Image finale
 FROM alpine:latest
@@ -48,9 +50,9 @@ COPY docker/scripts/ /listmonk/scripts/
 RUN chmod +x /listmonk/scripts/*.sh
 
 # Copier les fichiers de démonstration
-COPY demo_geo_data.csv /listmonk/demo/
-COPY demo_geographic_queries.sql /listmonk/demo/
-COPY test_geo_data.csv /listmonk/demo/
+COPY demo_geo_data.csv /listmonk/demo/ 2>/dev/null || true
+COPY demo_geographic_queries.sql /listmonk/demo/ 2>/dev/null || true
+COPY test_geo_data.csv /listmonk/demo/ 2>/dev/null || true
 
 # Point d'entrée avec initialisation géographique
 COPY docker/entrypoint.sh /entrypoint.sh

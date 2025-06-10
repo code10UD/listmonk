@@ -2,6 +2,7 @@
 
 ## ⚡ Installation en 3 Commandes
 
+### 🚀 Version Standard
 ```bash
 # 1. Cloner et configurer
 git clone https://github.com/code7UD/listmonk.git && cd listmonk
@@ -12,6 +13,31 @@ git checkout feature/french-geographic-segmentation
 
 # 3. Accéder à l'interface
 # http://localhost:9000 (admin/admin123!)
+```
+
+### 🛡️ Version Simplifiée (Recommandée si problèmes)
+```bash
+# 1. Cloner et configurer
+git clone https://github.com/code7UD/listmonk.git && cd listmonk
+git checkout feature/french-geographic-segmentation
+
+# 2. Démarrer (version sans build frontend)
+./start-geo-simple.sh
+
+# 3. Accéder à l'interface
+# http://localhost:9000 (admin/admin123!)
+```
+
+### 🔧 En cas de Problème
+```bash
+# Si erreur de build frontend
+./fix-frontend-build.sh
+
+# Si erreur de version Go
+./fix-docker-go-version.sh
+
+# Version de secours
+./start-geo-simple.sh
 ```
 
 ## 🎯 Ce que vous obtenez
