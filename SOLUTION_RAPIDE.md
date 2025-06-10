@@ -1,23 +1,41 @@
 # 🚨 Solution Rapide - Erreur de Build Docker
 
-## ❌ Problème Identifié
+## ❌ Problèmes Identifiés et Résolus
+
+### 1. Erreur de Build Docker ✅ RÉSOLU
 ```
 ERROR: failed to solve: failed to compute cache key: "/2>/dev/null": not found
 ```
 
-## ✅ Solution Appliquée
+### 2. Incompatibilité PostgreSQL ⚠️ NOUVEAU PROBLÈME
+```
+FATAL: database files are incompatible with server
+DETAIL: The data directory was initialized by PostgreSQL version 17, which is not compatible with this version 15.13.
+```
 
-Le problème venait d'une syntaxe incorrecte dans le Dockerfile. **C'est maintenant corrigé !**
+## ✅ Solutions Appliquées
 
-### Ce qui a été corrigé :
+### 1. Build Docker - CORRIGÉ ✅
 - ❌ `COPY demo_geo_data.csv /listmonk/demo/ 2>/dev/null || true` (syntaxe invalide)
 - ✅ `COPY demo_geo_data.csv /listmonk/demo/` (syntaxe correcte)
 
+### 2. PostgreSQL - CORRIGÉ ✅
+- ❌ PostgreSQL 15 (incompatible avec données v17 existantes)
+- ✅ PostgreSQL 17 (compatible avec données existantes)
+- ✅ Nettoyage automatique des volumes incompatibles
+
 ## 🚀 Installation Maintenant
 
+### Solution Automatique (Recommandée)
 ```bash
-# Nettoyage et installation avec les corrections
+# Nettoyage complet et installation avec toutes les corrections
 ./install-listmonk-geo.sh --clean && ./install-listmonk-geo.sh
+```
+
+### Solution Manuelle PostgreSQL (Si problème persiste)
+```bash
+# Script spécialisé pour PostgreSQL
+./scripts/docker/fix-postgres-version.sh
 ```
 
 ## 🔍 Diagnostic Automatique

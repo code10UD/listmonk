@@ -60,11 +60,19 @@ cleanup_previous_installations() {
     log_info "Nettoyage des installations précédentes..."
     
     # Arrêter tous les containers listmonk existants
-    docker-compose -f docker-compose.geo.yml down 2>/dev/null || true
-    docker-compose -f docker-compose.simple.yml down 2>/dev/null || true
-    docker-compose -f docker-compose.ports-fixed.yml down 2>/dev/null || true
+    docker-compose -f docker-compose.geo.yml down -v 2>/dev/null || true
+    docker-compose -f docker-compose.simple.yml down -v 2>/dev/null || true
+    docker-compose -f docker-compose.ports-fixed.yml down -v 2>/dev/null || true
+    docker-compose -f docker-compose.custom.yml down -v 2>/dev/null || true
     
-    # Supprimer les images orphelines
+    # Supprimer spécifiquement les volumes PostgreSQL problématiques
+    log_info "Nettoyage des volumes PostgreSQL incompatibles..."
+    docker volume rm listmonk_postgres_data 2>/dev/null || true
+    docker volume rm listmonk-geo_postgres_data 2>/dev/null || true
+    docker volume rm $(docker volume ls -q | grep -E "(listmonk|postgres)") 2>/dev/null || true
+    
+    # Supprimer les containers arrêtés et images orphelines
+    docker container prune -f 2>/dev/null || true
     docker system prune -f 2>/dev/null || true
     
     log_success "Nettoyage terminé"

@@ -109,6 +109,17 @@ echo "============================="
 if docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "(listmonk|postgres)" &> /dev/null; then
     echo "Containers Listmonk trouvés:"
     docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "(listmonk|postgres)"
+    
+    # Vérifier les containers en erreur
+    if docker ps -a --format "{{.Names}}\t{{.Status}}" | grep -E "(listmonk|postgres)" | grep -q "Exited\|unhealthy"; then
+        log_warning "Containers en erreur détectés"
+        
+        # Vérifier spécifiquement l'erreur PostgreSQL
+        if docker logs listmonk-postgres-geo 2>/dev/null | grep -q "database files are incompatible"; then
+            log_error "Problème de version PostgreSQL détecté!"
+            log_info "Solution: ./scripts/docker/fix-postgres-version.sh"
+        fi
+    fi
 else
     log_info "Aucun container Listmonk trouvé"
 fi

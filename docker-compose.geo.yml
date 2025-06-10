@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # Base de données PostgreSQL
   postgres:
-    image: postgres:15-alpine
+    image: postgres:17-alpine
     container_name: listmonk-postgres-geo
     restart: unless-stopped
     environment:
