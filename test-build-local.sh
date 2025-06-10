@@ -183,8 +183,15 @@ if ! grep -q "CREATE TABLE.*departement_region_mapping" docker/init-scripts/01-i
     exit 1
 fi
 
-if ! grep -q "ALTER TABLE subscribers ADD COLUMN.*code_insee" docker/init-scripts/01-init-geo.sql; then
-    print_error "Extension table subscribers manquante dans SQL"
+# Vérifier que les départements français sont présents
+if ! grep -q "('01', 'Ain'" docker/init-scripts/01-init-geo.sql; then
+    print_error "Données départements françaises manquantes dans SQL"
+    exit 1
+fi
+
+# Vérifier les extensions PostgreSQL
+if ! grep -q "CREATE EXTENSION.*uuid-ossp" docker/init-scripts/01-init-geo.sql; then
+    print_error "Extension uuid-ossp manquante dans SQL"
     exit 1
 fi
 

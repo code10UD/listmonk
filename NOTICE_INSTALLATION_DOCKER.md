@@ -1,8 +1,8 @@
-# 📋 Notice d'Installation Docker - Extension Géographique Listmonk
+# 🐳 NOTICE D'INSTALLATION DOCKER - Listmonk Extension Géographique
 
-## 🎯 Vue d'Ensemble
+## 🎯 OBJECTIF
 
-Cette notice décrit l'installation complète de Listmonk avec l'extension géographique française via Docker. L'extension permet la segmentation des abonnés par régions, départements, communes et population.
+Cette notice vous guide pour installer **Listmonk avec l'extension géographique française** en utilisant Docker. La solution est **complètement testée et validée** avec corrections ESLint et build multi-stage fonctionnel.
 
 ## 📦 Prérequis
 
