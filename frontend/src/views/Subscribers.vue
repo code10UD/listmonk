@@ -58,6 +58,11 @@
                   </b-button>
                 </div>
               </div><!-- advanced query -->
+              
+              <!-- Geographic selector -->
+              <div v-if="isSearchAdvanced" class="mt-4">
+                <geo-selector v-model="geoQuery" @input="onGeoQueryChange" />
+              </div>
             </div>
           </form>
           <div v-if="!isSearchAdvanced" class="toggle-advanced">
@@ -194,6 +199,7 @@
 import Vue from 'vue';
 import { mapState } from 'vuex';
 import EmptyPlaceholder from '../components/EmptyPlaceholder.vue';
+import GeoSelector from '../components/GeoSelector.vue';
 import { uris } from '../constants';
 import SubscriberBulkList from './SubscriberBulkList.vue';
 import SubscriberForm from './SubscriberForm.vue';
@@ -205,6 +211,7 @@ export default Vue.extend({
     SubscriberBulkList,
     CopyText,
     EmptyPlaceholder,
+    GeoSelector,
   },
 
   data() {
@@ -223,6 +230,7 @@ export default Vue.extend({
       },
 
       queryInput: '',
+      geoQuery: '',
 
       // Query params to filter the getSubscribers() API call.
       queryParams: {
@@ -274,6 +282,17 @@ export default Vue.extend({
       this.$nextTick(() => {
         this.$refs.queryExp.focus();
       });
+    },
+
+    onGeoQueryChange(query) {
+      if (query && query.trim()) {
+        // Ajouter la requête géographique à la requête existante
+        if (this.queryParams.queryExp && this.queryParams.queryExp.trim()) {
+          this.queryParams.queryExp += ` AND ${query}`;
+        } else {
+          this.queryParams.queryExp = query;
+        }
+      }
     },
 
     // Mark all subscribers in the query as selected.

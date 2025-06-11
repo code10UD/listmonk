@@ -650,5 +650,22 @@
     "users.userRole": "Rôle utilisateur | Rôles utilisateur",
     "users.userRoles": "Rôles utilisateur",
     "users.username": "Nom d'utilisateur",
-    "users.usernameHelp": "Utilisé avec la connexion par mot de passe"
+    "users.usernameHelp": "Utilisé avec la connexion par mot de passe",
+    "geo.title": "Sélection géographique",
+    "geo.region": "Région",
+    "geo.allRegions": "Toutes les régions",
+    "geo.department": "Département",
+    "geo.allDepartments": "Tous les départements",
+    "geo.commune": "Commune",
+    "geo.searchCommune": "Rechercher une commune...",
+    "geo.csp": "Catégorie socio-professionnelle",
+    "geo.allCSP": "Toutes les CSP",
+    "geo.population": "Population",
+    "geo.populationMin": "Population min.",
+    "geo.populationMax": "Population max.",
+    "geo.testQuery": "Tester la sélection",
+    "geo.clear": "Effacer",
+    "geo.result": "Résultat",
+    "geo.applyToQuery": "Appliquer à la requête",
+    "geo.queryApplied": "Filtres géographiques appliqués à la requête"
 }
