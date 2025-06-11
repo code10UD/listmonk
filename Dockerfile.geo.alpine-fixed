@@ -86,8 +86,12 @@ COPY --from=backend-builder /src/permissions.json /listmonk/permissions.json
 # Copier les scripts d'initialisation
 COPY docker/init-scripts/ /listmonk/scripts/
 
+# Copier le script d'entrée
+COPY docker-entrypoint.sh /listmonk/docker-entrypoint.sh
+
 # Définir les permissions
 RUN chmod +x /listmonk/listmonk && \
+    chmod +x /listmonk/docker-entrypoint.sh && \
     chown -R listmonk:listmonk /listmonk
 
 # Basculer vers l'utilisateur listmonk
@@ -107,6 +111,6 @@ ENV LISTMONK_DB_USER="listmonk"
 ENV LISTMONK_DB_DATABASE="listmonk"
 ENV LISTMONK_DB_SSL_MODE="disable"
 
-# Point d'entrée
-ENTRYPOINT ["./listmonk"]
-CMD ["--config", "config.toml"]
+# Point d'entrée avec script de configuration automatique
+ENTRYPOINT ["/listmonk/docker-entrypoint.sh"]
+CMD ["./listmonk"]
