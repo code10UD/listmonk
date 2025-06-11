@@ -33,7 +33,9 @@ print_error() {
 
 # Déterminer le fichier docker-compose à utiliser
 COMPOSE_FILE=""
-if [[ -f "docker-compose.alpine-fixed.yml" ]]; then
+if [[ -f "docker-compose.postgres-fixed.yml" ]]; then
+    COMPOSE_FILE="docker-compose.postgres-fixed.yml"
+elif [[ -f "docker-compose.alpine-fixed.yml" ]]; then
     COMPOSE_FILE="docker-compose.alpine-fixed.yml"
 elif [[ -f "docker-compose.fixed.yml" ]]; then
     COMPOSE_FILE="docker-compose.fixed.yml"

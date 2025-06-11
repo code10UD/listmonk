@@ -128,6 +128,12 @@ fi
 # Attendre PostgreSQL si on démarre listmonk
 if [ "$1" = "./listmonk" ] || [ "$#" -eq 0 ]; then
     wait_for_postgres
+    
+    # Toujours essayer d'installer Listmonk (idempotent)
+    echo "📦 Installation/Vérification de Listmonk..."
+    cd /listmonk
+    ./listmonk --install --yes || echo "⚠️ Installation déjà effectuée ou erreur"
+    echo "✅ Listmonk prêt"
 fi
 
 echo "Launching listmonk with user=[${USER_NAME}] group=[${GROUP_NAME}] PUID=[${PUID}] PGID=[${PGID}]"

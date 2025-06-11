@@ -60,7 +60,9 @@ RUN stuffbin -a stuff -in listmonk -out listmonk \
     static/public:/static \
     frontend/dist:/frontend \
     i18n:/i18n \
-    config.toml.sample:/config.toml.sample
+    config.toml.sample:/config.toml.sample \
+    queries.sql:/queries.sql \
+    schema.sql:/schema.sql
 
 # Stage 3: Image finale
 FROM alpine:latest
