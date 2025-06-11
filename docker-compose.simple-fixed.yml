@@ -1,0 +1,44 @@
+version: '3.7'
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: listmonk-postgres
+    environment:
+      POSTGRES_DB: listmonk
+      POSTGRES_USER: listmonk
+      POSTGRES_PASSWORD: listmonk
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U listmonk -d listmonk"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  listmonk:
+    image: listmonk/listmonk:latest
+    container_name: listmonk-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      LISTMONK_db__host: postgres
+      LISTMONK_db__port: 5432
+      LISTMONK_db__user: listmonk
+      LISTMONK_db__password: listmonk
+      LISTMONK_db__database: listmonk
+      LISTMONK_db__ssl_mode: disable
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./uploads:/listmonk/uploads
+      - ./static:/listmonk/static
+      - ./config.toml:/listmonk/config.toml:ro
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

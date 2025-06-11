@@ -58,7 +58,7 @@
                   </b-button>
                 </div>
               </div><!-- advanced query -->
-              
+
               <!-- Geographic selector -->
               <div v-if="isSearchAdvanced" class="mt-4">
                 <geo-selector v-model="geoQuery" @input="onGeoQueryChange" />

@@ -1,130 +1,99 @@
 <template>
   <div class="geo-selector">
-    <div class="field">
-      <label class="label">{{ $t('geo.title') }}</label>
-      <div class="geo-controls">
-        <!-- Région -->
-        <div class="field">
-          <label class="label">{{ $t('geo.region') }}</label>
-          <div class="control">
-            <div class="select is-fullwidth">
-              <select v-model="selectedRegion" @change="onRegionChange">
-                <option value="">{{ $t('geo.allRegions') }}</option>
-                <option v-for="region in regions" :key="region.region_nom" :value="region.region_nom">
-                  {{ region.region_nom }}
-                </option>
-              </select>
-            </div>
-          </div>
-        </div>
+    <h4 class="title is-5">{{ $t('geo.title') }}</h4>
+    <div class="geo-controls">
+      <b-field :label="$t('geo.region')">
+        <b-select v-model="selectedRegion" @input="onRegionChange" expanded>
+          <option value="">{{ $t('geo.selectRegion') }}</option>
+          <option v-for="region in regions" :key="region.code" :value="region.code">
+            {{ region.name }}
+          </option>
+        </b-select>
+      </b-field>
 
-        <!-- Département -->
-        <div class="field">
-          <label class="label">{{ $t('geo.department') }}</label>
-          <div class="control">
-            <div class="select is-fullwidth">
-              <select v-model="selectedDepartement" @change="onDepartementChange">
-                <option value="">{{ $t('geo.allDepartments') }}</option>
-                <option v-for="dept in filteredDepartements" :key="dept.departement_numero" :value="dept.departement_numero">
-                  {{ dept.departement_nom }} ({{ dept.departement_numero }})
-                </option>
-              </select>
-            </div>
-          </div>
-        </div>
+      <b-field :label="$t('geo.department')">
+        <b-select v-model="selectedDepartment" @input="onDepartmentChange" expanded :disabled="!selectedRegion">
+          <option value="">{{ $t('geo.selectDepartment') }}</option>
+          <option v-for="dept in filteredDepartments" :key="dept.numero" :value="dept.numero">
+            {{ dept.name }} ({{ dept.numero }})
+          </option>
+        </b-select>
+      </b-field>
 
-        <!-- Commune -->
-        <div class="field">
-          <label class="label">{{ $t('geo.commune') }}</label>
-          <div class="control">
-            <input 
-              v-model="communeSearch" 
-              @input="searchCommunes"
-              class="input" 
-              type="text" 
-              :placeholder="$t('geo.searchCommune')"
+      <b-field :label="$t('geo.commune')">
+        <b-input
+          v-model="communeSearch"
+          @input="onCommuneSearch"
+          :placeholder="$t('geo.searchCommune')"
+          expanded
+          :disabled="!selectedDepartment"
+        />
+      </b-field>
+
+      <div v-if="communes.length > 0" class="commune-results">
+        <div
+          v-for="commune in communes"
+          :key="commune.code_insee"
+          class="commune-item"
+          @click="selectCommune(commune)"
+          @keydown.enter="selectCommune(commune)"
+          tabindex="0"
+          role="button"
+        >
+          <strong>{{ commune.name }}</strong> ({{ commune.code_postal }})
+          <br>
+          <small>Population: {{ commune.population?.toLocaleString() || 'N/A' }}</small>
+        </div>
+      </div>
+
+      <div class="columns">
+        <div class="column">
+          <b-field :label="$t('geo.populationMin')">
+            <b-input
+              v-model="populationMin"
+              type="number"
+              :placeholder="$t('geo.populationMinPlaceholder')"
             />
-          </div>
-          <div v-if="communes.length > 0" class="commune-list">
-            <div 
-              v-for="commune in communes" 
-              :key="commune.code_insee"
-              @click="selectCommune(commune)"
-              class="commune-item"
-            >
-              {{ commune.nom_commune }} ({{ commune.departement_numero }})
-              <span class="population">{{ formatNumber(commune.population_commune) }} hab.</span>
-            </div>
-          </div>
+          </b-field>
         </div>
+        <div class="column">
+          <b-field :label="$t('geo.populationMax')">
+            <b-input
+              v-model="populationMax"
+              type="number"
+              :placeholder="$t('geo.populationMaxPlaceholder')"
+            />
+          </b-field>
+        </div>
+      </div>
 
-        <!-- CSP -->
-        <div class="field">
-          <label class="label">{{ $t('geo.csp') }}</label>
-          <div class="control">
-            <div class="select is-fullwidth">
-              <select v-model="selectedCSP">
-                <option value="">{{ $t('geo.allCSP') }}</option>
-                <option v-for="csp in csps" :key="csp.csp" :value="csp.csp">
-                  {{ csp.csp }} ({{ csp.count }})
-                </option>
-              </select>
-            </div>
-          </div>
-        </div>
+      <b-field :label="$t('geo.csp')">
+        <b-select v-model="selectedCSP" expanded>
+          <option value="">{{ $t('geo.selectCSP') }}</option>
+          <option v-for="csp in csps" :key="csp.name" :value="csp.name">
+            {{ csp.name }} ({{ csp.count }})
+          </option>
+        </b-select>
+      </b-field>
 
-        <!-- Population -->
-        <div class="field">
-          <label class="label">{{ $t('geo.population') }}</label>
-          <div class="field has-addons">
-            <div class="control">
-              <input 
-                v-model.number="populationMin" 
-                class="input" 
-                type="number" 
-                :placeholder="$t('geo.populationMin')"
-              />
-            </div>
-            <div class="control">
-              <span class="button is-static">-</span>
-            </div>
-            <div class="control">
-              <input 
-                v-model.number="populationMax" 
-                class="input" 
-                type="number" 
-                :placeholder="$t('geo.populationMax')"
-              />
-            </div>
-          </div>
-        </div>
+      <div class="buttons">
+        <button type="button" class="button is-primary" @click="testSelection">
+          <b-icon icon="magnify" size="is-small" />
+          <span>{{ $t('geo.testSelection') }}</span>
+        </button>
 
-        <!-- Boutons d'action -->
-        <div class="field is-grouped">
-          <div class="control">
-            <button @click="testQuery" class="button is-primary" :class="{ 'is-loading': isLoading }">
-              <b-icon icon="magnify" size="is-small"></b-icon>
-              <span>{{ $t('geo.testQuery') }}</span>
-            </button>
-          </div>
-          <div class="control">
-            <button @click="clearFilters" class="button">
-              <b-icon icon="close" size="is-small"></b-icon>
-              <span>{{ $t('geo.clear') }}</span>
-            </button>
-          </div>
-        </div>
+        <button type="button" class="button is-success" @click="applySelection" :disabled="!hasSelection">
+          <b-icon icon="check" size="is-small" />
+          <span>{{ $t('geo.applySelection') }}</span>
+        </button>
 
-        <!-- Résultats -->
-        <div v-if="queryResult !== null" class="notification" :class="queryResult.count > 0 ? 'is-success' : 'is-warning'">
-          <strong>{{ $t('geo.result') }}:</strong> 
-          {{ queryResult.count }} {{ $t('subscribers.subscribers') }}
-          <div v-if="queryResult.count > 0" class="mt-2">
-            <button @click="applyToQuery" class="button is-small is-success">
-              {{ $t('geo.applyToQuery') }}
-            </button>
-          </div>
-        </div>
+        <button type="button" class="button" @click="clearSelection">
+          {{ $t('geo.clear') }}
+        </button>
+      </div>
+
+      <div v-if="testResult !== null" class="notification" :class="testResult > 0 ? 'is-success' : 'is-warning'">
+        {{ $t('geo.testResult', { count: testResult }) }}
       </div>
     </div>
   </div>
@@ -133,248 +102,261 @@
 <script>
 export default {
   name: 'GeoSelector',
-  
-  props: {
-    value: {
-      type: String,
-      default: ''
-    }
-  },
 
   data() {
     return {
+      selectedRegion: '',
+      selectedDepartment: '',
+      selectedCommune: '',
+      communeSearch: '',
+      populationMin: '',
+      populationMax: '',
+      selectedCSP: '',
+
       regions: [],
-      departements: [],
+      departments: [],
       communes: [],
       csps: [],
-      
-      selectedRegion: '',
-      selectedDepartement: '',
-      selectedCommune: '',
-      selectedCSP: '',
-      
-      communeSearch: '',
-      populationMin: null,
-      populationMax: null,
-      
-      queryResult: null,
-      isLoading: false,
-      
-      searchTimeout: null
-    }
+
+      testResult: null,
+      loading: false,
+    };
   },
 
   computed: {
-    filteredDepartements() {
-      if (!this.selectedRegion) return this.departements
-      return this.departements.filter(d => d.region_nom === this.selectedRegion)
-    }
+    filteredDepartments() {
+      if (!this.selectedRegion) return [];
+      return this.departments.filter((dept) => dept.region_code === this.selectedRegion);
+    },
+
+    hasSelection() {
+      return this.selectedRegion || this.selectedDepartment || this.selectedCommune
+             || this.populationMin || this.populationMax || this.selectedCSP;
+    },
   },
 
   mounted() {
-    this.loadGeoData()
+    this.loadRegions();
+    this.loadDepartments();
+    this.loadCSPs();
   },
 
   methods: {
-    async loadGeoData() {
+    async loadRegions() {
       try {
-        // Charger les régions
-        const regionsResponse = await this.$http.get('/api/geo/regions')
-        this.regions = regionsResponse.data.data || []
+        const response = await this.$http.get('/api/geo/regions');
+        this.regions = response.data.data || [];
+      } catch (error) {
+        this.$buefy.toast.open({
+          message: 'Erreur lors du chargement des régions',
+          type: 'is-danger',
+        });
+      }
+    },
 
-        // Charger les départements
-        const departementsResponse = await this.$http.get('/api/geo/departements')
-        this.departements = departementsResponse.data.data || []
+    async loadDepartments() {
+      try {
+        const response = await this.$http.get('/api/geo/departements');
+        this.departments = response.data.data || [];
+      } catch (error) {
+        this.$buefy.toast.open({
+          message: 'Erreur lors du chargement des départements',
+          type: 'is-danger',
+        });
+      }
+    },
 
-        // Charger les CSP
-        const cspsResponse = await this.$http.get('/api/geo/csps')
-        this.csps = cspsResponse.data.data || []
-      } catch (e) {
-        this.$utils.toast(this.$t('globals.messages.errorFetching'), 'is-danger')
-        console.error('Erreur chargement données géographiques:', e)
+    async loadCSPs() {
+      try {
+        const response = await this.$http.get('/api/geo/csps');
+        this.csps = response.data.data || [];
+      } catch (error) {
+        this.$buefy.toast.open({
+          message: 'Erreur lors du chargement des CSP',
+          type: 'is-danger',
+        });
       }
     },
 
     onRegionChange() {
-      this.selectedDepartement = ''
-      this.clearCommunes()
+      this.selectedDepartment = '';
+      this.selectedCommune = '';
+      this.communeSearch = '';
+      this.communes = [];
     },
 
-    onDepartementChange() {
-      this.clearCommunes()
+    onDepartmentChange() {
+      this.selectedCommune = '';
+      this.communeSearch = '';
+      this.communes = [];
     },
 
-    searchCommunes() {
-      if (this.searchTimeout) {
-        clearTimeout(this.searchTimeout)
+    async onCommuneSearch() {
+      if (this.communeSearch.length < 2) {
+        this.communes = [];
+        return;
       }
 
-      this.searchTimeout = setTimeout(async () => {
-        if (this.communeSearch.length < 2) {
-          this.communes = []
-          return
+      try {
+        const params = {
+          search: this.communeSearch,
+        };
+
+        if (this.selectedDepartment) {
+          params.departement = this.selectedDepartment;
         }
 
-        try {
-          const params = {
-            search: this.communeSearch,
-            limit: 10
-          }
-          
-          if (this.selectedDepartement) {
-            params.departement = this.selectedDepartement
-          }
-
-          const response = await this.$http.get('/api/geo/communes', { params })
-          this.communes = response.data.data || []
-        } catch (e) {
-          console.error('Erreur recherche communes:', e)
-        }
-      }, 300)
+        const response = await this.$http.get('/api/geo/communes', { params });
+        this.communes = response.data.data || [];
+      } catch (error) {
+        this.$buefy.toast.open({
+          message: 'Erreur lors de la recherche de communes',
+          type: 'is-danger',
+        });
+      }
     },
 
     selectCommune(commune) {
-      this.selectedCommune = commune.nom_commune
-      this.communeSearch = commune.nom_commune
-      this.communes = []
+      this.selectedCommune = commune.code_insee;
+      this.communeSearch = commune.name;
+      this.communes = [];
     },
 
-    clearCommunes() {
-      this.selectedCommune = ''
-      this.communeSearch = ''
-      this.communes = []
-    },
+    async testSelection() {
+      if (!this.hasSelection) {
+        this.$buefy.toast.open({
+          message: 'Veuillez sélectionner au moins un critère',
+          type: 'is-warning',
+        });
+        return;
+      }
 
-    clearFilters() {
-      this.selectedRegion = ''
-      this.selectedDepartement = ''
-      this.selectedCommune = ''
-      this.selectedCSP = ''
-      this.communeSearch = ''
-      this.populationMin = null
-      this.populationMax = null
-      this.queryResult = null
-      this.clearCommunes()
-    },
-
-    async testQuery() {
-      this.isLoading = true
-      
+      this.loading = true;
       try {
-        const params = {
-          regions: this.selectedRegion ? [this.selectedRegion] : [],
-          departements: this.selectedDepartement ? [this.selectedDepartement] : [],
-          communes: this.selectedCommune ? [this.selectedCommune] : [],
-          csps: this.selectedCSP ? [this.selectedCSP] : [],
-          use_population: !!(this.populationMin || this.populationMax),
-          population_min: this.populationMin,
-          population_max: this.populationMax
-        }
+        const query = this.buildQuery();
+        const response = await this.$http.post('/api/subscribers/query-test', {
+          query,
+        });
 
-        const response = await this.$http.post('/api/lists/query/geo', params)
-        this.queryResult = response.data.data
-      } catch (e) {
-        this.$utils.toast(this.$t('globals.messages.errorFetching'), 'is-danger')
-        console.error('Erreur test requête géographique:', e)
+        this.testResult = response.data.data.total || 0;
+      } catch (error) {
+        this.$buefy.toast.open({
+          message: 'Erreur lors du test de sélection',
+          type: 'is-danger',
+        });
       } finally {
-        this.isLoading = false
+        this.loading = false;
       }
     },
 
-    applyToQuery() {
-      // Construire la requête SQL
-      let conditions = []
-      
+    applySelection() {
+      if (!this.hasSelection) return;
+
+      const query = this.buildQuery();
+      this.$emit('input', query);
+
+      this.$buefy.toast.open({
+        message: 'Sélection géographique appliquée',
+        type: 'is-success',
+      });
+    },
+
+    buildQuery() {
+      const conditions = [];
+
       if (this.selectedRegion) {
-        conditions.push(`region = '${this.selectedRegion}'`)
-      }
-      
-      if (this.selectedDepartement) {
-        conditions.push(`departement_numero = '${this.selectedDepartement}'`)
-      }
-      
-      if (this.selectedCommune) {
-        conditions.push(`commune = '${this.selectedCommune}'`)
-      }
-      
-      if (this.selectedCSP) {
-        conditions.push(`csp = '${this.selectedCSP}'`)
-      }
-      
-      if (this.populationMin) {
-        conditions.push(`population_commune >= ${this.populationMin}`)
-      }
-      
-      if (this.populationMax) {
-        conditions.push(`population_commune <= ${this.populationMax}`)
+        conditions.push(`region = '${this.selectedRegion}'`);
       }
 
-      const query = conditions.length > 0 ? conditions.join(' AND ') : ''
-      this.$emit('input', query)
-      
-      this.$utils.toast(this.$t('geo.queryApplied'), 'is-success')
+      if (this.selectedDepartment) {
+        conditions.push(`departement_numero = '${this.selectedDepartment}'`);
+      }
+
+      if (this.selectedCommune) {
+        conditions.push(`commune_code_insee = '${this.selectedCommune}'`);
+      }
+
+      if (this.selectedCSP) {
+        conditions.push(`csp = '${this.selectedCSP}'`);
+      }
+
+      if (this.populationMin) {
+        conditions.push(`commune_population >= ${this.populationMin}`);
+      }
+
+      if (this.populationMax) {
+        conditions.push(`commune_population <= ${this.populationMax}`);
+      }
+
+      return conditions.join(' AND ');
     },
 
-    formatNumber(num) {
-      if (!num) return '0'
-      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
-    }
-  }
-}
+    clearSelection() {
+      this.selectedRegion = '';
+      this.selectedDepartment = '';
+      this.selectedCommune = '';
+      this.communeSearch = '';
+      this.populationMin = '';
+      this.populationMax = '';
+      this.selectedCSP = '';
+      this.communes = [];
+      this.testResult = null;
+
+      this.$emit('input', '');
+    },
+  },
+};
 </script>
 
 <style scoped>
 .geo-selector {
-  border: 2px solid #3273dc;
-  border-radius: 8px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
   padding: 1.5rem;
   margin: 1rem 0;
-  background: #f8f9fa;
 }
 
 .geo-controls {
   display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 1rem;
 }
 
-.geo-controls .field:nth-child(3),
-.geo-controls .field:nth-child(4),
-.geo-controls .field:nth-child(5),
-.geo-controls .field:nth-child(6) {
-  grid-column: 1 / -1;
-}
-
-.commune-list {
-  position: absolute;
-  z-index: 1000;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+.commune-results {
   max-height: 200px;
   overflow-y: auto;
-  width: 100%;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
 }
 
 .commune-item {
-  padding: 0.5rem;
-  cursor: pointer;
+  padding: 0.75rem;
   border-bottom: 1px solid #eee;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
-.commune-item:hover {
-  background: #f5f5f5;
+.commune-item:hover,
+.commune-item:focus {
+  background-color: #f5f5f5;
 }
 
 .commune-item:last-child {
   border-bottom: none;
 }
 
-.population {
+.buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.notification {
+  margin-top: 1rem;
+}
+
+.help-text {
   font-size: 0.8rem;
   color: #666;
 }
