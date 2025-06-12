@@ -19,13 +19,16 @@ COPY frontend/ ./
 RUN yarn build
 
 # Stage 2: Build backend
-FROM golang:1.24.4-alpine AS backend-builder
+FROM golang:1.24-alpine AS backend-builder
 
-# Installer les dépendances de build
-RUN apk add --no-cache git make build-base ca-certificates
+# Installer les dépendances de build (avec outils GNU pour compatibilité)
+RUN apk add --no-cache git make build-base ca-certificates grep coreutils nodejs npm yarn
 
 # Définir le répertoire de travail
 WORKDIR /src
+
+# Créer le fichier VERSION manquant
+RUN echo "v2.5.1" > VERSION
 
 # Copier les fichiers de dépendances Go
 COPY go.mod go.sum ./
@@ -38,6 +41,10 @@ COPY models/ ./models/
 COPY queries.sql ./
 COPY schema.sql ./
 COPY Makefile ./
+
+# Modifier les commandes grep dans le Makefile pour être compatibles BusyBox
+RUN sed -i 's/grep -oP/grep -oE/g' Makefile && \
+    sed -i 's/grep -P/grep -E/g' Makefile
 COPY static/ ./static/
 COPY i18n/ ./i18n/
 COPY config.toml.sample ./config.toml.sample
@@ -46,6 +53,9 @@ COPY frontend/ ./frontend/
 
 # Copier les fichiers frontend compilés au bon endroit
 COPY --from=frontend-builder /src/dist ./frontend/dist
+
+# Corriger le Makefile pour compatibilité BusyBox (remplacer grep -P par grep -E)
+RUN sed -i 's/grep -P/grep -E/g' Makefile
 
 # Installer stuffbin pour intégrer les fichiers statiques
 RUN go install github.com/knadh/stuffbin/...
