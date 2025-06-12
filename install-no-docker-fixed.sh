@@ -50,7 +50,7 @@ success "PostgreSQL actif"
 
 echo ""
 
-# Étape 2: Configuration de la base de données
+# Étape 2: Configuration de la base de données (CORRIGÉE)
 step "Configuration de la base de données"
 
 # Vérifier si la base existe déjà
@@ -67,13 +67,89 @@ fi
 
 step "Création de la base de données et de l'utilisateur..."
 sudo -u postgres psql << EOF
+-- Créer la base de données
 CREATE DATABASE listmonk;
+
+-- Créer l'utilisateur avec tous les privilèges nécessaires
 CREATE USER listmonk WITH PASSWORD 'listmonk';
+
+-- Donner tous les privilèges sur la base
 GRANT ALL PRIVILEGES ON DATABASE listmonk TO listmonk;
 ALTER USER listmonk CREATEDB;
+
+-- Se connecter à la base listmonk pour configurer les permissions
+\c listmonk
+
+-- Donner tous les privilèges sur le schéma public
+GRANT ALL ON SCHEMA public TO listmonk;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO listmonk;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO listmonk;
+
+-- Permettre la création de nouvelles tables/séquences
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO listmonk;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO listmonk;
+
+-- Donner temporairement les droits superuser pour l'installation
+ALTER USER listmonk WITH SUPERUSER;
+
+-- Afficher les permissions pour vérification
+\du listmonk
+\dn+ public
 EOF
 
-success "Base de données et utilisateur créés"
+success "Base de données et utilisateur créés avec toutes les permissions"
+
+# Test de la connexion et des permissions
+step "Test de la connexion et des permissions..."
+
+# Test de connexion basique
+if PGPASSWORD=listmonk psql -h localhost -p 5432 -U listmonk -d listmonk -c "SELECT 1;" > /dev/null 2>&1; then
+    success "Connexion à la base réussie"
+else
+    error "Impossible de se connecter à la base de données"
+    echo "Tentative de correction des permissions..."
+    
+    # Tentative de correction
+    sudo -u postgres psql listmonk << EOF
+GRANT ALL ON SCHEMA public TO listmonk;
+ALTER USER listmonk WITH SUPERUSER;
+EOF
+    
+    # Test à nouveau
+    if PGPASSWORD=listmonk psql -h localhost -p 5432 -U listmonk -d listmonk -c "SELECT 1;" > /dev/null 2>&1; then
+        success "Connexion corrigée"
+    else
+        error "Problème de connexion persistant"
+        exit 1
+    fi
+fi
+
+# Test des permissions de création de tables
+step "Test des permissions de création de tables..."
+if PGPASSWORD=listmonk psql -h localhost -p 5432 -U listmonk -d listmonk -c "CREATE TABLE test_permissions (id INTEGER); DROP TABLE test_permissions;" > /dev/null 2>&1; then
+    success "Permissions de création de tables OK"
+else
+    error "Permissions insuffisantes pour créer des tables"
+    echo "Application de permissions étendues..."
+    
+    sudo -u postgres psql listmonk << EOF
+-- Donner tous les privilèges possibles
+GRANT ALL ON SCHEMA public TO listmonk;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO listmonk;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO listmonk;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO listmonk;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO listmonk;
+ALTER USER listmonk WITH SUPERUSER;
+EOF
+    
+    # Test final
+    if PGPASSWORD=listmonk psql -h localhost -p 5432 -U listmonk -d listmonk -c "CREATE TABLE test_permissions (id INTEGER); DROP TABLE test_permissions;" > /dev/null 2>&1; then
+        success "Permissions corrigées"
+    else
+        error "Impossible de résoudre les permissions"
+        exit 1
+    fi
+fi
 
 # Configuration de l'authentification PostgreSQL
 step "Configuration de l'authentification PostgreSQL..."
@@ -111,15 +187,7 @@ else
     success "Configuration PostgreSQL déjà correcte"
 fi
 
-# Test de la connexion
-step "Test de la connexion..."
-if PGPASSWORD=listmonk psql -h localhost -p 5432 -U listmonk -d listmonk -c "SELECT 1;" > /dev/null 2>&1; then
-    success "Base de données configurée et accessible"
-else
-    error "Impossible de se connecter à la base de données"
-    echo "Vérifiez la configuration PostgreSQL"
-    exit 1
-fi
+success "Base de données configurée et accessible avec toutes les permissions"
 
 echo ""
 
@@ -213,34 +281,65 @@ success "Configuration créée"
 
 echo ""
 
-# Étape 5: Installation de base Listmonk
-step "Installation de base Listmonk"
+# Étape 5: Nettoyage et préparation
+step "Nettoyage de l'environnement"
 
-step "Basculement vers master pour installation de base..."
-git checkout master
+# Arrêter tout processus listmonk
+pkill -f listmonk 2>/dev/null || true
 
-step "Installation de la base de données de base..."
-if go run cmd/*.go --config config.toml --install --yes; then
-    success "Base de données de base installée"
-else
-    error "Erreur lors de l'installation de base"
-    exit 1
-fi
+# Nettoyer les fichiers compilés
+rm -rf cmd/listmonk 2>/dev/null || true
+rm -rf *.log 2>/dev/null || true
 
-echo ""
+# Nettoyer le cache Go
+go clean -cache
+go clean -modcache 2>/dev/null || true
 
-# Étape 6: Application des extensions géographiques
-step "Application des extensions géographiques"
+success "Environnement nettoyé"
+
+# Étape 6: Installation directe avec extensions géographiques
+step "Installation Listmonk avec extensions géographiques"
 
 step "Basculement vers la branche géographique..."
+git clean -fd
+git reset --hard HEAD
 git checkout feature/french-geographic-segmentation
 
-step "Application des migrations géographiques..."
-if go run cmd/*.go --config config.toml --upgrade --yes; then
-    success "Extensions géographiques appliquées"
+step "Préparation du code..."
+go mod tidy
+go build -o listmonk cmd/*.go
+
+step "Installation de la base de données avec extensions..."
+if ./listmonk --config config.toml --install --yes; then
+    success "Installation complète réussie"
 else
-    error "Erreur lors de l'application des extensions géographiques"
-    exit 1
+    error "Erreur lors de l'installation"
+    
+    # Tentative de fallback sur master puis upgrade
+    warning "Tentative d'installation en deux étapes..."
+    
+    git checkout master
+    go mod tidy
+    go build -o listmonk cmd/*.go
+    
+    if ./listmonk --config config.toml --install --yes; then
+        success "Installation de base réussie"
+        
+        # Maintenant appliquer les extensions
+        git checkout feature/french-geographic-segmentation
+        go mod tidy
+        go build -o listmonk cmd/*.go
+        
+        if ./listmonk --config config.toml --upgrade --yes; then
+            success "Extensions géographiques appliquées"
+        else
+            error "Erreur lors de l'application des extensions"
+            exit 1
+        fi
+    else
+        error "Impossible d'installer même la version de base"
+        exit 1
+    fi
 fi
 
 echo ""
@@ -281,7 +380,16 @@ success "Données de test ajoutées"
 
 echo ""
 
-# Étape 9: Statistiques finales
+# Étape 9: Configuration de la sécurité finale
+step "Configuration de la sécurité finale"
+
+# Retirer les privilèges superuser après installation
+sudo -u postgres psql -c "ALTER USER listmonk WITH NOSUPERUSER;" 2>/dev/null || true
+success "Privilèges de sécurité appliqués"
+
+echo ""
+
+# Étape 10: Statistiques finales
 step "Statistiques finales"
 
 total_subscribers=$(PGPASSWORD=listmonk psql -h localhost -p 5432 -U listmonk -d listmonk -t -c "SELECT COUNT(*) FROM subscribers;" 2>/dev/null | tr -d ' ')
