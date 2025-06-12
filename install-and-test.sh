@@ -12,7 +12,9 @@ NC='\033[0m' # No Color
 
 # Configuration
 export PATH=$PATH:/usr/local/go/bin
-cd /workspace/listmonk
+# Utiliser le répertoire courant (où le script est exécuté)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 
 # Fonction pour afficher les étapes
 step() {

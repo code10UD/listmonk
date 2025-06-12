@@ -23,6 +23,8 @@ chmod +x install-and-test.sh
 ./install-and-test.sh
 ```
 
+> **Note**: Le script s'adapte automatiquement au répertoire où vous l'exécutez.
+
 **C'est tout ! 🎉**
 
 ---
