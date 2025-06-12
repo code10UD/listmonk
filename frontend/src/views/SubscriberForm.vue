@@ -267,7 +267,7 @@ export default Vue.extend({
       visibleMeta: {},
 
       egAttribs: '{"job": "developer", "location": "Mars", "has_rocket": true}',
-      
+
       // Geographic data
       geoData: {
         region: '',
@@ -279,7 +279,7 @@ export default Vue.extend({
         csp: '',
         age: '',
       },
-      
+
       regions: [],
       departments: [],
       csps: [],
@@ -416,7 +416,7 @@ export default Vue.extend({
           this.$api.getGeoDepartments(),
           this.$api.getGeoCSPs(),
         ]);
-        
+
         this.regions = regionsResp.data || [];
         this.departments = departmentsResp.data || [];
         this.csps = cspsResp.data || [];
@@ -428,7 +428,7 @@ export default Vue.extend({
     updateAttribsFromGeo() {
       try {
         const currentAttribs = JSON.parse(this.form.strAttribs || '{}');
-        
+
         // Mettre à jour les données géographiques
         if (this.geoData.region || this.geoData.departement || this.geoData.commune) {
           currentAttribs.geo = {
@@ -440,15 +440,15 @@ export default Vue.extend({
             code_postal: this.geoData.code_postal,
           };
         }
-        
+
         if (this.geoData.csp) {
           currentAttribs.csp = this.geoData.csp;
         }
-        
+
         if (this.geoData.age) {
           currentAttribs.age = parseInt(this.geoData.age, 10);
         }
-        
+
         this.form.strAttribs = JSON.stringify(currentAttribs, null, 2);
       } catch (error) {
         this.$utils.toast('Erreur lors de la mise à jour des attributs', 'is-danger');
@@ -458,7 +458,7 @@ export default Vue.extend({
     loadGeoFromAttribs() {
       try {
         const attribs = JSON.parse(this.form.strAttribs || '{}');
-        
+
         if (attribs.geo) {
           this.geoData.region = attribs.geo.region || '';
           this.geoData.departement = attribs.geo.departement || '';
@@ -467,7 +467,7 @@ export default Vue.extend({
           this.geoData.code_insee = attribs.geo.code_insee || '';
           this.geoData.code_postal = attribs.geo.code_postal || '';
         }
-        
+
         this.geoData.csp = attribs.csp || '';
         this.geoData.age = attribs.age || '';
       } catch (error) {
@@ -509,7 +509,7 @@ export default Vue.extend({
         // Deep-copy the lists array on to the form.
         strAttribs: JSON.stringify(this.$props.data.attribs, null, 4),
       };
-      
+
       // Load geographic data from attributes
       this.loadGeoFromAttribs();
     }

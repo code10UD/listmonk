@@ -288,27 +288,27 @@ export default Vue.extend({
       if (geoParams && typeof geoParams === 'object') {
         // Construire la requête SQL à partir des paramètres géographiques
         const conditions = [];
-        
+
         if (geoParams.regions && geoParams.regions.length > 0) {
-          const regionList = geoParams.regions.map(r => `'${r}'`).join(',');
+          const regionList = geoParams.regions.map((r) => `'${r}'`).join(',');
           conditions.push(`attribs->'geo'->>'region' IN (${regionList})`);
         }
-        
+
         if (geoParams.departements && geoParams.departements.length > 0) {
-          const deptList = geoParams.departements.map(d => `'${d}'`).join(',');
+          const deptList = geoParams.departements.map((d) => `'${d}'`).join(',');
           conditions.push(`attribs->'geo'->>'departement' IN (${deptList})`);
         }
-        
+
         if (geoParams.codes_insee && geoParams.codes_insee.length > 0) {
-          const inseeList = geoParams.codes_insee.map(c => `'${c}'`).join(',');
+          const inseeList = geoParams.codes_insee.map((c) => `'${c}'`).join(',');
           conditions.push(`attribs->'geo'->>'code_insee' IN (${inseeList})`);
         }
-        
+
         if (geoParams.csps && geoParams.csps.length > 0) {
-          const cspList = geoParams.csps.map(c => `'${c}'`).join(',');
+          const cspList = geoParams.csps.map((c) => `'${c}'`).join(',');
           conditions.push(`attribs->>'csp' IN (${cspList})`);
         }
-        
+
         if (geoParams.use_population) {
           if (geoParams.population_min) {
             conditions.push(`(attribs->>'age')::int >= ${geoParams.population_min}`);
@@ -317,10 +317,10 @@ export default Vue.extend({
             conditions.push(`(attribs->>'age')::int <= ${geoParams.population_max}`);
           }
         }
-        
+
         if (conditions.length > 0) {
           const geoQuery = conditions.join(' AND ');
-          
+
           // Remplacer ou ajouter la requête géographique
           if (this.queryParams.queryExp && this.queryParams.queryExp.trim()) {
             // Supprimer l'ancienne requête géographique s'il y en a une
@@ -329,7 +329,7 @@ export default Vue.extend({
           } else {
             this.queryParams.queryExp = `(${geoQuery})`;
           }
-          
+
           // Déclencher la recherche
           this.querySubscribers();
         }

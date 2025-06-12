@@ -1,59 +1,57 @@
 #!/bin/bash
 
-echo "🔐 CRÉATION DU COMPTE ADMINISTRATEUR"
-echo "===================================="
+# Script pour créer un utilisateur admin dans Listmonk
 
-# Attendre que l'application soit prête
-echo "⏳ Attente que l'application soit prête..."
-sleep 10
+set -e
 
-# Vérifier que l'application répond
-echo "🌐 Test de connectivité..."
-if curl -s -f http://localhost:9000 > /dev/null; then
-    echo "✅ Application accessible"
-else
-    echo "❌ Application non accessible, attente supplémentaire..."
-    sleep 10
+echo "👤 CRÉATION D'UN UTILISATEUR ADMIN"
+echo "=================================="
+
+cd "$(dirname "$0")"
+
+# Vérifier que PostgreSQL est en cours
+if ! docker ps | grep -q "dev-db-1"; then
+    echo "❌ PostgreSQL n'est pas en cours. Démarrez-le d'abord avec:"
+    echo "   cd dev && docker-compose up -d db"
+    exit 1
 fi
 
-# Création du compte admin via l'API REST
-echo "👤 Création du compte administrateur..."
+echo "👤 Création de l'utilisateur admin..."
 
-# Première tentative : vérifier si un admin existe déjà
-ADMIN_EXISTS=$(curl -s -X POST http://localhost:9000/api/admin/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"listmonk"}' | grep -o "success" || echo "not_found")
+# Vérifier les rôles disponibles et créer un utilisateur admin
+docker-compose -f dev/docker-compose.yml exec -T db psql -U listmonk-dev -d listmonk-dev << 'EOF'
+-- Vérifier les rôles disponibles
+SELECT id, name FROM roles ORDER BY id;
 
-if [ "$ADMIN_EXISTS" = "success" ]; then
-    echo "✅ Compte admin déjà configuré (admin/listmonk)"
-else
-    echo "🔧 Configuration du compte admin..."
-    
-    # Tentative de création via l'installation
-    docker-compose exec app ./listmonk --install --yes --config /dev/null << 'EOF'
-admin
-listmonk
+-- Insérer un utilisateur admin si il n'existe pas
+INSERT INTO users (username, email, name, password, password_login, type, user_role_id, status, created_at, updated_at)
+SELECT 
+    'admin',
+    'admin@listmonk.local',
+    'Admin',
+    '$2a$10$8.xn/nC8dvko7NDmx4qCa.3UiD/PlqJY1lWgfuVgLOtI6aOLZqUAm', -- password: admin123
+    true,
+    'user',
+    1, -- Utiliser le premier rôle disponible
+    'enabled',
+    NOW(),
+    NOW()
+WHERE NOT EXISTS (
+    SELECT 1 FROM users WHERE email = 'admin@listmonk.local'
+);
+
+-- Vérifier que l'utilisateur a été créé
+SELECT id, username, email, name, type, status FROM users WHERE email = 'admin@listmonk.local';
+
+\q
 EOF
 
-    # Vérification
-    sleep 5
-    ADMIN_CHECK=$(curl -s -X POST http://localhost:9000/api/admin/login \
-      -H "Content-Type: application/json" \
-      -d '{"username":"admin","password":"listmonk"}' | grep -o "success" || echo "failed")
-    
-    if [ "$ADMIN_CHECK" = "success" ]; then
-        echo "✅ Compte admin créé avec succès"
-    else
-        echo "⚠️ Création automatique échouée, utilisez l'interface web"
-        echo "   Allez sur http://localhost:9000 pour configurer le compte"
-    fi
-fi
-
+echo "✅ Utilisateur admin créé!"
 echo ""
-echo "🎯 INFORMATIONS DE CONNEXION"
-echo "============================"
-echo "🌐 URL : http://localhost:9000"
-echo "👤 Username : admin"
-echo "🔑 Password : listmonk"
+echo "🔑 INFORMATIONS DE CONNEXION :"
+echo "   Email    : admin@listmonk.local"
+echo "   Password : admin123"
 echo ""
-echo "Si la connexion échoue, allez sur l'interface web pour créer le compte."
+echo "🌐 Vous pouvez maintenant vous connecter à :"
+echo "   http://localhost:9000/admin"
+echo ""
