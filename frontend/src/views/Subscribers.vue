@@ -284,14 +284,59 @@ export default Vue.extend({
       });
     },
 
-    onGeoQueryChange(query) {
-      if (query && query.trim()) {
-        // Ajouter la requête géographique à la requête existante
-        if (this.queryParams.queryExp && this.queryParams.queryExp.trim()) {
-          this.queryParams.queryExp += ` AND ${query}`;
-        } else {
-          this.queryParams.queryExp = query;
+    onGeoQueryChange(geoParams) {
+      if (geoParams && typeof geoParams === 'object') {
+        // Construire la requête SQL à partir des paramètres géographiques
+        const conditions = [];
+        
+        if (geoParams.regions && geoParams.regions.length > 0) {
+          const regionList = geoParams.regions.map(r => `'${r}'`).join(',');
+          conditions.push(`attribs->'geo'->>'region' IN (${regionList})`);
         }
+        
+        if (geoParams.departements && geoParams.departements.length > 0) {
+          const deptList = geoParams.departements.map(d => `'${d}'`).join(',');
+          conditions.push(`attribs->'geo'->>'departement' IN (${deptList})`);
+        }
+        
+        if (geoParams.codes_insee && geoParams.codes_insee.length > 0) {
+          const inseeList = geoParams.codes_insee.map(c => `'${c}'`).join(',');
+          conditions.push(`attribs->'geo'->>'code_insee' IN (${inseeList})`);
+        }
+        
+        if (geoParams.csps && geoParams.csps.length > 0) {
+          const cspList = geoParams.csps.map(c => `'${c}'`).join(',');
+          conditions.push(`attribs->>'csp' IN (${cspList})`);
+        }
+        
+        if (geoParams.use_population) {
+          if (geoParams.population_min) {
+            conditions.push(`(attribs->>'age')::int >= ${geoParams.population_min}`);
+          }
+          if (geoParams.population_max) {
+            conditions.push(`(attribs->>'age')::int <= ${geoParams.population_max}`);
+          }
+        }
+        
+        if (conditions.length > 0) {
+          const geoQuery = conditions.join(' AND ');
+          
+          // Remplacer ou ajouter la requête géographique
+          if (this.queryParams.queryExp && this.queryParams.queryExp.trim()) {
+            // Supprimer l'ancienne requête géographique s'il y en a une
+            const baseQuery = this.queryParams.queryExp.replace(/\s*AND\s*\(.*geo.*\)/gi, '');
+            this.queryParams.queryExp = `${baseQuery} AND (${geoQuery})`.trim();
+          } else {
+            this.queryParams.queryExp = `(${geoQuery})`;
+          }
+          
+          // Déclencher la recherche
+          this.querySubscribers();
+        }
+      } else if (geoParams === '') {
+        // Effacer les filtres géographiques
+        this.queryParams.queryExp = this.queryParams.queryExp.replace(/\s*AND\s*\(.*geo.*\)/gi, '').trim();
+        this.querySubscribers();
       }
     },
 

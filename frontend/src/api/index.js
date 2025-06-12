@@ -532,3 +532,14 @@ export const deleteRole = (id) => http.delete(
   `/api/roles/${id}`,
   { loading: models.userRoles },
 );
+
+// Geographic API methods
+export const getGeoRegions = () => http.get('/api/geo/regions');
+
+export const getGeoDepartments = () => http.get('/api/geo/departements');
+
+export const getGeoCommunes = (params) => http.get('/api/geo/communes', { params });
+
+export const getGeoCSPs = () => http.get('/api/geo/csps');
+
+export const testGeoQuery = (data) => http.post('/api/lists/query/geo', data);

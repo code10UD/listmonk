@@ -144,8 +144,8 @@ export default {
   methods: {
     async loadRegions() {
       try {
-        const response = await this.$http.get('/api/geo/regions');
-        this.regions = response.data.data || [];
+        const response = await this.$api.getGeoRegions();
+        this.regions = response.data || [];
       } catch (error) {
         this.$buefy.toast.open({
           message: 'Erreur lors du chargement des régions',
@@ -156,8 +156,8 @@ export default {
 
     async loadDepartments() {
       try {
-        const response = await this.$http.get('/api/geo/departements');
-        this.departments = response.data.data || [];
+        const response = await this.$api.getGeoDepartments();
+        this.departments = response.data || [];
       } catch (error) {
         this.$buefy.toast.open({
           message: 'Erreur lors du chargement des départements',
@@ -168,8 +168,8 @@ export default {
 
     async loadCSPs() {
       try {
-        const response = await this.$http.get('/api/geo/csps');
-        this.csps = response.data.data || [];
+        const response = await this.$api.getGeoCSPs();
+        this.csps = response.data || [];
       } catch (error) {
         this.$buefy.toast.open({
           message: 'Erreur lors du chargement des CSP',
@@ -206,8 +206,8 @@ export default {
           params.departement = this.selectedDepartment;
         }
 
-        const response = await this.$http.get('/api/geo/communes', { params });
-        this.communes = response.data.data || [];
+        const response = await this.$api.getGeoCommunes(params);
+        this.communes = response.data || [];
       } catch (error) {
         this.$buefy.toast.open({
           message: 'Erreur lors de la recherche de communes',
@@ -234,9 +234,9 @@ export default {
       this.loading = true;
       try {
         const params = this.buildGeoParams();
-        const response = await this.$http.post('/api/lists/query/geo', params);
+        const response = await this.$api.testGeoQuery(params);
 
-        this.testResult = response.data.data.count || 0;
+        this.testResult = response.data.count || 0;
       } catch (error) {
         this.$buefy.toast.open({
           message: 'Erreur lors du test de sélection',

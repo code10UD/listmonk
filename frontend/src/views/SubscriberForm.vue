@@ -138,6 +138,75 @@
               </b-table-column>
             </b-table>
           </b-tab-item>
+
+          <!-- Geographic data tab -->
+          <b-tab-item :label="$t('geo.title')" label-position="on-border">
+            <div class="geo-form">
+              <div class="columns">
+                <div class="column is-6">
+                  <b-field :label="$t('geo.region')">
+                    <b-select v-model="geoData.region" expanded>
+                      <option value="">{{ $t('geo.selectRegion') }}</option>
+                      <option v-for="region in regions" :key="region.region_nom" :value="region.region_nom">
+                        {{ region.region_nom }}
+                      </option>
+                    </b-select>
+                  </b-field>
+                </div>
+                <div class="column is-6">
+                  <b-field :label="$t('geo.department')">
+                    <b-select v-model="geoData.departement" expanded :disabled="!geoData.region">
+                      <option value="">{{ $t('geo.selectDepartment') }}</option>
+                      <option v-for="dept in filteredDepartments" :key="dept.departement_numero" :value="dept.departement_numero">
+                        {{ dept.departement_nom }} ({{ dept.departement_numero }})
+                      </option>
+                    </b-select>
+                  </b-field>
+                </div>
+              </div>
+
+              <div class="columns">
+                <div class="column is-6">
+                  <b-field :label="$t('geo.commune')">
+                    <b-input v-model="geoData.commune" :placeholder="$t('geo.searchCommune')" />
+                  </b-field>
+                </div>
+                <div class="column is-6">
+                  <b-field label="Code INSEE">
+                    <b-input v-model="geoData.code_insee" placeholder="Code INSEE" />
+                  </b-field>
+                </div>
+              </div>
+
+              <div class="columns">
+                <div class="column is-4">
+                  <b-field label="Code postal">
+                    <b-input v-model="geoData.code_postal" placeholder="Code postal" />
+                  </b-field>
+                </div>
+                <div class="column is-4">
+                  <b-field :label="$t('geo.csp')">
+                    <b-select v-model="geoData.csp" expanded>
+                      <option value="">{{ $t('geo.selectCSP') }}</option>
+                      <option v-for="csp in csps" :key="csp.csp" :value="csp.csp">
+                        {{ csp.csp }}
+                      </option>
+                    </b-select>
+                  </b-field>
+                </div>
+                <div class="column is-4">
+                  <b-field label="Âge">
+                    <b-input v-model="geoData.age" type="number" placeholder="Âge" />
+                  </b-field>
+                </div>
+              </div>
+
+              <div class="notification is-info is-light">
+                <b-icon icon="information" size="is-small" />
+                {{ $t('geo.formHelp') }}
+              </div>
+            </div>
+          </b-tab-item>
         </b-tabs>
 
         <b-field :message="$t('subscribers.attribsHelp') + ' ' + egAttribs" class="mt-6">
@@ -198,6 +267,22 @@ export default Vue.extend({
       visibleMeta: {},
 
       egAttribs: '{"job": "developer", "location": "Mars", "has_rocket": true}',
+      
+      // Geographic data
+      geoData: {
+        region: '',
+        departement: '',
+        departement_nom: '',
+        commune: '',
+        code_insee: '',
+        code_postal: '',
+        csp: '',
+        age: '',
+      },
+      
+      regions: [],
+      departments: [],
+      csps: [],
     };
   },
 
@@ -323,6 +408,72 @@ export default Vue.extend({
 
       return attribs;
     },
+
+    async loadGeoData() {
+      try {
+        const [regionsResp, departmentsResp, cspsResp] = await Promise.all([
+          this.$api.getGeoRegions(),
+          this.$api.getGeoDepartments(),
+          this.$api.getGeoCSPs(),
+        ]);
+        
+        this.regions = regionsResp.data || [];
+        this.departments = departmentsResp.data || [];
+        this.csps = cspsResp.data || [];
+      } catch (error) {
+        this.$utils.toast('Erreur lors du chargement des données géographiques', 'is-danger');
+      }
+    },
+
+    updateAttribsFromGeo() {
+      try {
+        const currentAttribs = JSON.parse(this.form.strAttribs || '{}');
+        
+        // Mettre à jour les données géographiques
+        if (this.geoData.region || this.geoData.departement || this.geoData.commune) {
+          currentAttribs.geo = {
+            region: this.geoData.region,
+            departement: this.geoData.departement,
+            departement_nom: this.geoData.departement_nom,
+            commune: this.geoData.commune,
+            code_insee: this.geoData.code_insee,
+            code_postal: this.geoData.code_postal,
+          };
+        }
+        
+        if (this.geoData.csp) {
+          currentAttribs.csp = this.geoData.csp;
+        }
+        
+        if (this.geoData.age) {
+          currentAttribs.age = parseInt(this.geoData.age, 10);
+        }
+        
+        this.form.strAttribs = JSON.stringify(currentAttribs, null, 2);
+      } catch (error) {
+        this.$utils.toast('Erreur lors de la mise à jour des attributs', 'is-danger');
+      }
+    },
+
+    loadGeoFromAttribs() {
+      try {
+        const attribs = JSON.parse(this.form.strAttribs || '{}');
+        
+        if (attribs.geo) {
+          this.geoData.region = attribs.geo.region || '';
+          this.geoData.departement = attribs.geo.departement || '';
+          this.geoData.departement_nom = attribs.geo.departement_nom || '';
+          this.geoData.commune = attribs.geo.commune || '';
+          this.geoData.code_insee = attribs.geo.code_insee || '';
+          this.geoData.code_postal = attribs.geo.code_postal || '';
+        }
+        
+        this.geoData.csp = attribs.csp || '';
+        this.geoData.age = attribs.age || '';
+      } catch (error) {
+        // Ignore JSON parsing errors for now
+      }
+    },
   },
 
   computed: {
@@ -331,9 +482,26 @@ export default Vue.extend({
     hasOptinList() {
       return this.form.lists.some((l) => l.optin === 'double');
     },
+
+    filteredDepartments() {
+      if (!this.geoData.region) return [];
+      return this.departments.filter((dept) => dept.region_nom === this.geoData.region);
+    },
+  },
+
+  watch: {
+    geoData: {
+      handler() {
+        this.updateAttribsFromGeo();
+      },
+      deep: true,
+    },
   },
 
   mounted() {
+    // Load geographic data
+    this.loadGeoData();
+
     if (this.$props.isEditing) {
       this.form = {
         ...this.$props.data,
@@ -341,6 +509,9 @@ export default Vue.extend({
         // Deep-copy the lists array on to the form.
         strAttribs: JSON.stringify(this.$props.data.attribs, null, 4),
       };
+      
+      // Load geographic data from attributes
+      this.loadGeoFromAttribs();
     }
 
     if (this.form.id) {

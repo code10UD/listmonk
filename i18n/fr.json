@@ -675,5 +675,6 @@
     "geo.populationMaxPlaceholder": "Population maximale",
     "geo.testSelection": "Tester la sélection",
     "geo.applySelection": "Appliquer la sélection",
-    "geo.testResult": "{count} abonnés correspondent aux critères"
+    "geo.testResult": "{count} abonnés correspondent aux critères",
+    "geo.formHelp": "Les données géographiques sont automatiquement synchronisées avec les attributs JSON ci-dessous."
 }
