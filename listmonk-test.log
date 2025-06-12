@@ -1,0 +1,10 @@
+2025/06/12 11:13:23.342026 main.go:106: 
+2025/06/12 11:13:23.342173 init.go:169: reading config: config.toml
+2025/06/12 11:13:23.342571 init.go:309: connecting to db: localhost:5432/listmonk
+2025/06/12 11:13:23.348467 init.go:226: unable to initialize embedded filesystem (no ID found in the file). Using local filesystem
+2025/06/12 11:13:23.348585 init.go:248: loading i18n files from: i18n
+2025/06/12 11:13:23.348662 init.go:268: loading static files from: static
+2025/06/12 11:13:24.073994 init.go:711: media upload provider: filesystem
+2025/06/12 11:13:24.074427 init.go:620: initialized email (SMTP) messenger: username@smtp.yoursite.com
+2025/06/12 11:13:24.146122 init.go:895: error starting HTTP server: listen tcp 0.0.0.0:9000: bind: address already in use
+exit status 1

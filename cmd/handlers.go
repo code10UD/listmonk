@@ -138,8 +138,13 @@ func initHTTPHandlers(e *echo.Echo, a *App) {
 		g.POST("/api/import/subscribers", pm(a.ImportSubscribers, "subscribers:import"))
 		g.DELETE("/api/import/subscribers", pm(a.StopImportSubscribers, "subscribers:import"))
 
-		// Geographic API endpoints moved to public group for testing
-		// TODO: Move back to authenticated group once session issue is resolved
+		// Geographic API endpoints - accessible to authenticated users
+		g.GET("/api/geo/regions", a.handleGetRegions)
+		g.GET("/api/geo/departements", a.handleGetDepartements)
+		g.GET("/api/geo/communes", a.handleGetCommunes)
+		g.GET("/api/geo/csps", a.handleGetCSPs)
+		g.GET("/api/geo/stats", a.handleGetGeoStats)
+		g.POST("/api/lists/query/geo", a.handleGeoQuery)
 
 		// Individual list permissions are applied directly within handleGetLists.
 		g.GET("/api/lists", a.GetLists)
@@ -239,14 +244,6 @@ func initHTTPHandlers(e *echo.Echo, a *App) {
 		if a.cfg.EnablePublicArchive {
 			g.GET("/api/public/archive", a.GetCampaignArchives)
 		}
-
-		// Geographic API endpoints (temporarily in public group for testing)
-		g.GET("/api/geo/regions", a.handleGetRegions)
-		g.GET("/api/geo/departements", a.handleGetDepartements)
-		g.GET("/api/geo/communes", a.handleGetCommunes)
-		g.GET("/api/geo/csps", a.handleGetCSPs)
-		g.GET("/api/geo/stats", a.handleGetGeoStats)
-		g.POST("/api/lists/query/geo", a.handleGeoQuery)
 
 		// /public/static/* file server is registered in initHTTPServer().
 		// Public subscriber facing views.
