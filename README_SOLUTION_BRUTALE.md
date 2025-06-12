@@ -80,4 +80,14 @@ docker-compose exec db psql -U postgres -d listmonk -c "\d subscribers"
 docker-compose exec db psql -U postgres -d listmonk -c "SELECT * FROM regions_france;"
 ```
 
+## 🌐 **CORRECTION BINDING ADDRESS**
+
+Si l'application démarre sur `127.0.0.1:9000` au lieu de `0.0.0.0:9000` :
+
+```bash
+./fix-address-binding.sh
+```
+
+Cela corrige le binding pour rendre l'application accessible depuis l'extérieur.
+
 ## 🎉 **CETTE MÉTHODE MARCHE. POINT.**

@@ -32,6 +32,7 @@ services:
     depends_on:
       - db
     environment:
+      LISTMONK_app__address: "0.0.0.0:9000"
       LISTMONK_db__host: db
       LISTMONK_db__port: 5432
       LISTMONK_db__user: postgres
