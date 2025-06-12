@@ -5,8 +5,8 @@
       <b-field :label="$t('geo.region')">
         <b-select v-model="selectedRegion" @input="onRegionChange" expanded>
           <option value="">{{ $t('geo.selectRegion') }}</option>
-          <option v-for="region in regions" :key="region.code" :value="region.code">
-            {{ region.name }}
+          <option v-for="region in regions" :key="region.region_code" :value="region.region_nom">
+            {{ region.region_nom }}
           </option>
         </b-select>
       </b-field>
@@ -14,8 +14,8 @@
       <b-field :label="$t('geo.department')">
         <b-select v-model="selectedDepartment" @input="onDepartmentChange" expanded :disabled="!selectedRegion">
           <option value="">{{ $t('geo.selectDepartment') }}</option>
-          <option v-for="dept in filteredDepartments" :key="dept.numero" :value="dept.numero">
-            {{ dept.name }} ({{ dept.numero }})
+          <option v-for="dept in filteredDepartments" :key="dept.departement_numero" :value="dept.departement_numero">
+            {{ dept.departement_nom }} ({{ dept.departement_numero }})
           </option>
         </b-select>
       </b-field>
@@ -40,9 +40,9 @@
           tabindex="0"
           role="button"
         >
-          <strong>{{ commune.name }}</strong> ({{ commune.code_postal }})
+          <strong>{{ commune.nom_commune }}</strong> ({{ commune.code_insee }})
           <br>
-          <small>Population: {{ commune.population?.toLocaleString() || 'N/A' }}</small>
+          <small>Population: {{ commune.population_commune?.toLocaleString() || 'N/A' }}</small>
         </div>
       </div>
 
@@ -70,8 +70,8 @@
       <b-field :label="$t('geo.csp')">
         <b-select v-model="selectedCSP" expanded>
           <option value="">{{ $t('geo.selectCSP') }}</option>
-          <option v-for="csp in csps" :key="csp.name" :value="csp.name">
-            {{ csp.name }} ({{ csp.count }})
+          <option v-for="csp in csps" :key="csp.csp" :value="csp.csp">
+            {{ csp.csp }} ({{ csp.count }})
           </option>
         </b-select>
       </b-field>
@@ -126,7 +126,7 @@ export default {
   computed: {
     filteredDepartments() {
       if (!this.selectedRegion) return [];
-      return this.departments.filter((dept) => dept.region_code === this.selectedRegion);
+      return this.departments.filter((dept) => dept.region_nom === this.selectedRegion);
     },
 
     hasSelection() {
@@ -218,7 +218,7 @@ export default {
 
     selectCommune(commune) {
       this.selectedCommune = commune.code_insee;
-      this.communeSearch = commune.name;
+      this.communeSearch = commune.nom_commune;
       this.communes = [];
     },
 
@@ -233,12 +233,10 @@ export default {
 
       this.loading = true;
       try {
-        const query = this.buildQuery();
-        const response = await this.$http.post('/api/subscribers/query-test', {
-          query,
-        });
+        const params = this.buildGeoParams();
+        const response = await this.$http.post('/api/lists/query/geo', params);
 
-        this.testResult = response.data.data.total || 0;
+        this.testResult = response.data.data.count || 0;
       } catch (error) {
         this.$buefy.toast.open({
           message: 'Erreur lors du test de sélection',
@@ -252,8 +250,8 @@ export default {
     applySelection() {
       if (!this.hasSelection) return;
 
-      const query = this.buildQuery();
-      this.$emit('input', query);
+      const params = this.buildGeoParams();
+      this.$emit('input', params);
 
       this.$buefy.toast.open({
         message: 'Sélection géographique appliquée',
@@ -261,34 +259,43 @@ export default {
       });
     },
 
-    buildQuery() {
-      const conditions = [];
+    buildGeoParams() {
+      const params = {
+        regions: [],
+        departements: [],
+        communes: [],
+        codes_insee: [],
+        csps: [],
+        use_population: false,
+      };
 
       if (this.selectedRegion) {
-        conditions.push(`region = '${this.selectedRegion}'`);
+        params.regions.push(this.selectedRegion);
       }
 
       if (this.selectedDepartment) {
-        conditions.push(`departement_numero = '${this.selectedDepartment}'`);
+        params.departements.push(this.selectedDepartment);
       }
 
       if (this.selectedCommune) {
-        conditions.push(`commune_code_insee = '${this.selectedCommune}'`);
+        params.codes_insee.push(this.selectedCommune);
       }
 
       if (this.selectedCSP) {
-        conditions.push(`csp = '${this.selectedCSP}'`);
+        params.csps.push(this.selectedCSP);
       }
 
-      if (this.populationMin) {
-        conditions.push(`commune_population >= ${this.populationMin}`);
+      if (this.populationMin || this.populationMax) {
+        params.use_population = true;
+        if (this.populationMin) {
+          params.population_min = parseInt(this.populationMin, 10);
+        }
+        if (this.populationMax) {
+          params.population_max = parseInt(this.populationMax, 10);
+        }
       }
 
-      if (this.populationMax) {
-        conditions.push(`commune_population <= ${this.populationMax}`);
-      }
-
-      return conditions.join(' AND ');
+      return params;
     },
 
     clearSelection() {

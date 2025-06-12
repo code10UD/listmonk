@@ -667,5 +667,13 @@
     "geo.clear": "Effacer",
     "geo.result": "Résultat",
     "geo.applyToQuery": "Appliquer à la requête",
-    "geo.queryApplied": "Filtres géographiques appliqués à la requête"
+    "geo.queryApplied": "Filtres géographiques appliqués à la requête",
+    "geo.selectRegion": "Sélectionner une région",
+    "geo.selectDepartment": "Sélectionner un département",
+    "geo.selectCSP": "Sélectionner une CSP",
+    "geo.populationMinPlaceholder": "Population minimale",
+    "geo.populationMaxPlaceholder": "Population maximale",
+    "geo.testSelection": "Tester la sélection",
+    "geo.applySelection": "Appliquer la sélection",
+    "geo.testResult": "{count} abonnés correspondent aux critères"
 }

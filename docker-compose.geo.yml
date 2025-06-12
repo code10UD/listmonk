@@ -28,7 +28,7 @@ services:
   listmonk:
     build:
       context: .
-      dockerfile: Dockerfile.geo
+      dockerfile: Dockerfile.geo.complete
     container_name: listmonk-app-geo
     restart: unless-stopped
     depends_on:
@@ -48,9 +48,9 @@ services:
     ports:
       - "9000:9000"
     volumes:
-      - ./config/config.toml:/listmonk/config.toml:ro
+      - ./config.toml:/listmonk/config.toml:ro
       - uploads_data:/listmonk/uploads
-      - ./demo:/listmonk/demo:ro
+      - ./mairielist.csv:/listmonk/demo/mairielist.csv:ro
     networks:
       - listmonk-network
     healthcheck:
