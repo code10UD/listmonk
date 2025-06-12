@@ -7,8 +7,7 @@ services:
     environment:
       POSTGRES_DB: listmonk
       POSTGRES_USER: listmonk
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-listmonk_secure_password_2024}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/init-scripts:/docker-entrypoint-initdb.d
@@ -33,6 +32,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       LISTMONK_DB_HOST: postgres
       LISTMONK_DB_PORT: 5432
       LISTMONK_DB_USER: listmonk
