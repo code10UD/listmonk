@@ -105,4 +105,4 @@ EXPOSE 9000
 
 # Point d'entrée
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["./listmonk"]
+CMD ["./listmonk", "--config", "/tmp/config.toml"]
