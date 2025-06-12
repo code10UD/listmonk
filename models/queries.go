@@ -129,6 +129,17 @@ type Queries struct {
 	DeleteRole            *sqlx.Stmt `query:"delete-role"`
 	UpsertListPermissions *sqlx.Stmt `query:"upsert-list-permissions"`
 	DeleteListPermission  *sqlx.Stmt `query:"delete-list-permission"`
+
+	// Geographic queries for French segmentation
+	GetGeoRegions           *sqlx.Stmt `query:"get-geo-regions"`
+	GetGeoDepartements      *sqlx.Stmt `query:"get-geo-departements"`
+	GetGeoCommunes          *sqlx.Stmt `query:"get-geo-communes"`
+	GetGeoCSPs              *sqlx.Stmt `query:"get-geo-csps"`
+	QuerySubscribersGeo     *sqlx.Stmt `query:"query-subscribers-geo"`
+	GetGeoStatsByRegion     *sqlx.Stmt `query:"get-geo-stats-by-region"`
+	GetGeoStatsByDepartement *sqlx.Stmt `query:"get-geo-stats-by-departement"`
+	GetGeoStatsByCSP        *sqlx.Stmt `query:"get-geo-stats-by-csp"`
+	GetGeoPopulationStats   *sqlx.Stmt `query:"get-geo-population-stats"`
 }
 
 // compileSubscriberQueryTpl takes an arbitrary WHERE expressions

@@ -1,0 +1,12 @@
+[db]
+host = "localhost"
+port = 5432
+user = "listmonk"
+password = "listmonk"
+database = "listmonk"
+ssl_mode = "disable"
+
+[app]
+address = "0.0.0.0:9000"
+admin_username = "admin"
+admin_password = "admin"

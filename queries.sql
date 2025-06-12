@@ -1339,3 +1339,95 @@ UPDATE roles SET name=$2, permissions=$3 WHERE id=$1 and parent_id IS NULL RETUR
 
 -- name: delete-role
 DELETE FROM roles WHERE id=$1;
+
+-- Geographic queries for French segmentation
+
+-- name: get-geo-regions
+-- Récupère la liste des régions françaises distinctes
+SELECT DISTINCT region_nom, region_code 
+FROM departement_region_mapping 
+ORDER BY region_nom;
+
+-- name: get-geo-departements  
+-- Récupère la liste des départements avec leurs régions
+SELECT departement_numero, departement_nom, region_nom, region_code
+FROM departement_region_mapping 
+ORDER BY departement_nom;
+
+-- name: get-geo-communes
+-- Recherche de communes par nom et/ou département avec comptage des abonnés
+SELECT DISTINCT s.nom_commune, s.code_insee, s.population_commune, s.departement_numero,
+       COUNT(*) as count
+FROM subscribers s
+WHERE s.nom_commune IS NOT NULL 
+  AND s.nom_commune != ''
+  AND ($1 = '' OR s.nom_commune ILIKE '%' || $1 || '%')
+  AND ($2 = '' OR s.departement_numero = $2)
+GROUP BY s.nom_commune, s.code_insee, s.population_commune, s.departement_numero
+ORDER BY count DESC, s.nom_commune
+LIMIT 50;
+
+-- name: get-geo-csps
+-- Récupère les CSP disponibles avec comptage des abonnés
+SELECT s.csp, COUNT(*) as count
+FROM subscribers s
+WHERE s.csp IS NOT NULL 
+  AND s.csp != ''
+  AND s.status = 'enabled'
+GROUP BY s.csp
+ORDER BY count DESC;
+
+-- name: query-subscribers-geo
+-- Requête géographique complexe pour compter les abonnés correspondant aux critères
+SELECT COUNT(*) as count
+FROM subscribers s
+LEFT JOIN departement_region_mapping drm ON s.departement_numero = drm.departement_numero
+WHERE s.status = 'enabled'
+  AND (CARDINALITY(string_to_array($1, ',')) = 0 OR $1 = '{}' OR drm.region_nom = ANY(string_to_array(trim($1, '{}'), ',')))
+  AND (CARDINALITY(string_to_array($2, ',')) = 0 OR $2 = '{}' OR s.departement_numero = ANY(string_to_array(trim($2, '{}'), ',')))
+  AND (CARDINALITY(string_to_array($3, ',')) = 0 OR $3 = '{}' OR s.code_insee = ANY(string_to_array(trim($3, '{}'), ',')))
+  AND (CARDINALITY(string_to_array($4, ',')) = 0 OR $4 = '{}' OR s.csp = ANY(string_to_array(trim($4, '{}'), ',')))
+  AND ($5 = 0 OR s.population_commune >= $5)
+  AND ($6 = 0 OR s.population_commune <= $6);
+
+-- name: get-geo-stats-by-region
+-- Statistiques des abonnés par région
+SELECT drm.region_nom, COUNT(*) as count
+FROM subscribers s
+LEFT JOIN departement_region_mapping drm ON s.departement_numero = drm.departement_numero
+WHERE s.status = 'enabled' 
+  AND drm.region_nom IS NOT NULL
+GROUP BY drm.region_nom
+ORDER BY count DESC;
+
+-- name: get-geo-stats-by-departement
+-- Statistiques des abonnés par département
+SELECT s.departement_numero, COUNT(*) as count
+FROM subscribers s
+WHERE s.status = 'enabled' 
+  AND s.departement_numero IS NOT NULL
+  AND s.departement_numero != ''
+GROUP BY s.departement_numero
+ORDER BY count DESC;
+
+-- name: get-geo-stats-by-csp
+-- Statistiques des abonnés par CSP
+SELECT s.csp, COUNT(*) as count
+FROM subscribers s
+WHERE s.status = 'enabled' 
+  AND s.csp IS NOT NULL
+  AND s.csp != ''
+GROUP BY s.csp
+ORDER BY count DESC;
+
+-- name: get-geo-population-stats
+-- Statistiques de population des communes
+SELECT 
+  COALESCE(MIN(s.population_commune), 0) as min,
+  COALESCE(MAX(s.population_commune), 0) as max,
+  COALESCE(AVG(s.population_commune), 0) as avg,
+  COUNT(*) as total
+FROM subscribers s
+WHERE s.status = 'enabled' 
+  AND s.population_commune IS NOT NULL
+  AND s.population_commune > 0;
