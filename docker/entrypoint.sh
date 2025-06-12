@@ -8,7 +8,7 @@ echo "🚀 Démarrage de Listmonk avec extension géographique..."
 
 # Créer un fichier de configuration avec les variables d'environnement
 echo "📝 Création de la configuration..."
-cat > config.toml << EOF
+cat > /tmp/config.toml << EOF
 [app]
 address = "${LISTMONK_APP_ADDRESS:-0.0.0.0:9000}"
 admin_username = "${LISTMONK_APP_ADMIN_USERNAME:-admin}"
@@ -83,7 +83,7 @@ echo "✅ PostgreSQL est prêt!"
 
 # Vérifier si la base de données est initialisée
 echo "🗄️ Initialisation de la base de données..."
-if ! ./listmonk --config config.toml --install --idempotent --yes; then
+if ! ./listmonk --config /tmp/config.toml --install --idempotent --yes; then
   echo "❌ Erreur lors de l'initialisation de la base de données"
   exit 1
 fi
@@ -92,7 +92,7 @@ echo "✅ Base de données initialisée"
 
 # Exécuter les migrations géographiques si nécessaire
 echo "🗺️ Application des migrations géographiques..."
-if ! ./listmonk --config config.toml --upgrade --yes; then
+if ! ./listmonk --config /tmp/config.toml --upgrade --yes; then
   echo "❌ Erreur lors des migrations géographiques"
   exit 1
 fi
