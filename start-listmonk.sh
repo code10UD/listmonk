@@ -28,7 +28,7 @@ if ! systemctl is-active --quiet postgresql 2>/dev/null; then
 fi
 
 # Vérifier la connexion DB
-if ! psql -U listmonk -d listmonk -h localhost -c "SELECT 1;" > /dev/null 2>&1; then
+if ! PGPASSWORD=listmonk psql -U listmonk -d listmonk -h localhost -c "SELECT 1;" > /dev/null 2>&1; then
     echo -e "${RED}❌ Impossible de se connecter à la base de données${NC}"
     echo "Vérifiez la configuration PostgreSQL"
     exit 1

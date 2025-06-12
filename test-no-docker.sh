@@ -25,7 +25,7 @@ fi
 
 # Test 2: Base de données
 echo -n "🔗 Connexion base de données... "
-if psql -U listmonk -d listmonk -h localhost -c "SELECT 1;" > /dev/null 2>&1; then
+if PGPASSWORD=listmonk psql -U listmonk -d listmonk -h localhost -c "SELECT 1;" > /dev/null 2>&1; then
     success "OK"
 else
     error "Échec"
@@ -33,7 +33,7 @@ fi
 
 # Test 3: Tables géographiques
 echo -n "🗺️  Table departement_region_mapping... "
-if count=$(psql -U listmonk -d listmonk -h localhost -t -c "SELECT COUNT(*) FROM departement_region_mapping;" 2>/dev/null | tr -d ' '); then
+if count=$(PGPASSWORD=listmonk psql -U listmonk -d listmonk -h localhost -t -c "SELECT COUNT(*) FROM departement_region_mapping;" 2>/dev/null | tr -d ' '); then
     success "OK ($count départements)"
 else
     error "Manquante"
@@ -41,7 +41,7 @@ fi
 
 # Test 4: Colonnes géographiques
 echo -n "👥 Colonnes géographiques subscribers... "
-if psql -U listmonk -d listmonk -h localhost -c "SELECT code_insee, departement_numero FROM subscribers LIMIT 1;" > /dev/null 2>&1; then
+if PGPASSWORD=listmonk psql -U listmonk -d listmonk -h localhost -c "SELECT code_insee, departement_numero FROM subscribers LIMIT 1;" > /dev/null 2>&1; then
     success "Présentes"
 else
     error "Manquantes"
@@ -83,10 +83,10 @@ echo ""
 
 # Statistiques
 echo "📊 STATISTIQUES:"
-total_subscribers=$(psql -U listmonk -d listmonk -h localhost -t -c "SELECT COUNT(*) FROM subscribers;" 2>/dev/null | tr -d ' ')
-geo_subscribers=$(psql -U listmonk -d listmonk -h localhost -t -c "SELECT COUNT(*) FROM subscribers WHERE departement_numero IS NOT NULL;" 2>/dev/null | tr -d ' ')
-total_regions=$(psql -U listmonk -d listmonk -h localhost -t -c "SELECT COUNT(DISTINCT region_nom) FROM departement_region_mapping;" 2>/dev/null | tr -d ' ')
-total_departements=$(psql -U listmonk -d listmonk -h localhost -t -c "SELECT COUNT(*) FROM departement_region_mapping;" 2>/dev/null | tr -d ' ')
+total_subscribers=$(PGPASSWORD=listmonk psql -U listmonk -d listmonk -h localhost -t -c "SELECT COUNT(*) FROM subscribers;" 2>/dev/null | tr -d ' ')
+geo_subscribers=$(PGPASSWORD=listmonk psql -U listmonk -d listmonk -h localhost -t -c "SELECT COUNT(*) FROM subscribers WHERE departement_numero IS NOT NULL;" 2>/dev/null | tr -d ' ')
+total_regions=$(PGPASSWORD=listmonk psql -U listmonk -d listmonk -h localhost -t -c "SELECT COUNT(DISTINCT region_nom) FROM departement_region_mapping;" 2>/dev/null | tr -d ' ')
+total_departements=$(PGPASSWORD=listmonk psql -U listmonk -d listmonk -h localhost -t -c "SELECT COUNT(*) FROM departement_region_mapping;" 2>/dev/null | tr -d ' ')
 
 echo "   • Total abonnés: $total_subscribers"
 echo "   • Abonnés avec données géo: $geo_subscribers"
@@ -111,7 +111,7 @@ echo "🔧 COMMANDES UTILES:"
 echo "   • Démarrer: ./start-listmonk.sh"
 echo "   • Arrêter: pkill -f 'go run cmd'"
 echo "   • Logs: tail -f listmonk.log"
-echo "   • Test DB: psql -U listmonk -d listmonk -h localhost"
+echo "   • Test DB: PGPASSWORD=listmonk psql -U listmonk -d listmonk -h localhost"
 
 echo ""
 success "🎯 Test terminé !"
